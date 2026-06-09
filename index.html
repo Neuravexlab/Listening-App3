@@ -36,6 +36,23 @@ main { max-width:860px; margin:0 auto; padding:20px 16px 80px; }
 .rate-row { display:flex; gap:4px; }
 .rate-btn { border:none; border-radius:6px; padding:6px 11px; font-size:12px; cursor:pointer; color:#fff; background:#1e1e1e; font-family:inherit; font-weight:400; }
 .rate-btn.active { font-weight:800; }
+.voice-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+.voice-btn { border:none; border-radius:8px; padding:6px 12px; font-size:12px; cursor:pointer; color:#fff; background:#1e1e1e; font-family:inherit; font-weight:400; transition:all 0.15s; white-space:nowrap; }
+.voice-btn.active { font-weight:800; }
+#voice-status { font-size:11px; color:#555; margin-top:4px; }
+/* 連続再生 */
+.continuous-panel { background:#111; border:1px solid #2a2a2a; border-radius:12px; padding:14px 16px; margin-bottom:12px; }
+.continuous-panel-title { font-size:10px; font-weight:800; color:#555; letter-spacing:0.15em; margin-bottom:10px; }
+.continuous-controls { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.cont-rate-btn { border:none; border-radius:6px; padding:6px 12px; font-size:12px; cursor:pointer; color:#fff; background:#1e1e1e; font-family:inherit; font-weight:400; }
+.cont-rate-btn.active { font-weight:800; }
+#cont-play-btn { border:none; border-radius:8px; padding:9px 18px; font-size:13px; font-weight:800; cursor:pointer; color:#fff; font-family:inherit; }
+#cont-stop-btn { background:#1e1e1e; border:1px solid #2a2a2a; border-radius:8px; padding:9px 14px; font-size:13px; cursor:pointer; color:#666; font-family:inherit; }
+#cont-status { font-size:11px; color:#4CAF82; margin-top:8px; min-height:16px; }
+.cont-progress { display:flex; gap:4px; flex-wrap:wrap; margin-top:10px; }
+.cont-dot { width:8px; height:8px; border-radius:50%; background:#2a2a2a; transition:all 0.3s; }
+.cont-dot.playing { transform:scale(1.4); }
+.cont-dot.done { background:#4CAF82; }
 #play-btn { border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:700; cursor:pointer; color:#fff; font-family:inherit; }
 #play-full-btn { border:none; border-radius:8px; padding:10px 16px; font-size:13px; font-weight:700; cursor:pointer; color:#fff; font-family:inherit; background:#555; }
 #stop-btn { background:#1e1e1e; border:1px solid #2a2a2a; border-radius:8px; padding:10px 14px; font-size:14px; cursor:pointer; color:#666; font-family:inherit; }
@@ -155,6 +172,23 @@ textarea { width:100%; padding:11px 13px; background:#0d0d0d; border:1px solid #
     <button id="back-btn" onclick="showHome()">← レベル選択</button>
     <div style="font-size:16px;font-weight:800" id="lesson-select-title"></div>
   </div>
+
+  <!-- 連続再生パネル -->
+  <div class="continuous-panel" id="continuous-panel" style="display:none">
+    <div class="continuous-panel-title">▶ 連続再生モード</div>
+    <div style="font-size:13px;color:#888;margin-bottom:10px" id="cont-lesson-name"></div>
+    <div class="continuous-controls">
+      <span style="font-size:11px;color:#555;white-space:nowrap">速度：</span>
+      <button class="cont-rate-btn active" data-crate="1.0" onclick="setContRate(1.0)">1.0x</button>
+      <button class="cont-rate-btn" data-crate="1.25" onclick="setContRate(1.25)">1.25x</button>
+      <span style="font-size:11px;color:#555;white-space:nowrap;margin-left:4px">間隔：0.5秒</span>
+      <button id="cont-play-btn" onclick="playContinuous()">▶ 再生開始</button>
+      <button id="cont-stop-btn" onclick="stopContinuous()">■ 停止</button>
+    </div>
+    <div id="cont-status"></div>
+    <div class="cont-progress" id="cont-progress"></div>
+  </div>
+
   <div class="lesson-select-grid" id="lesson-select-grid"></div>
 </div>
 
@@ -180,6 +214,10 @@ textarea { width:100%; padding:11px 13px; background:#0d0d0d; border:1px solid #
       <span id="sentence-counter"></span>
     </div>
     <div id="phrase-text"></div>
+    <div class="voice-row" id="voice-row">
+      <span style="font-size:11px;color:#555;white-space:nowrap">🎙 音声：</span>
+    </div>
+    <div id="voice-status"></div>
     <div class="tts-row">
       <div class="rate-row">
         <button class="rate-btn" data-rate="0.5"  onclick="setRate(0.5)">0.5x</button>
@@ -397,6 +435,146 @@ const LESSONS = {
           soundNote:"balance is → 「バランスィズ」のようにe iが連結。healthy way → 「ヘルシウェイ」のようにthが「ス」に近い音。" },
       ]
     },
+    {
+      id:"A-L05", topic:"旅行・観光",
+      sentences: [
+        { en:"Japan is one of the most popular tourist destinations in the world.",
+          slashChunks:[{en:"Japan",ja:"日本は"},{en:"is one of the most popular tourist destinations",ja:"最も人気の高い観光地の1つだ"},{en:"in the world.",ja:"世界で"}],
+          soundNote:"one of the most→「ワネヴダモウスト」のように連結。tourist destinations→「チュアリストデスティネイションズ」のようにtが濁る。" },
+        { en:"Every year, millions of visitors come to see temples, shrines, and natural scenery.",
+          slashChunks:[{en:"Every year,",ja:"毎年"},{en:"millions of visitors come",ja:"何百万人もの訪問者が来る"},{en:"to see temples, shrines, and natural scenery.",ja:"寺社や自然の景色を見るために"}],
+          soundNote:"millions of→「ミリョンゾヴ」のように連結。natural scenery→「ナチュロゥスィーナリ」のようにlが弱化。" },
+        { en:"Kyoto is especially famous for its traditional culture and beautiful gardens.",
+          slashChunks:[{en:"Kyoto is especially famous",ja:"京都は特に有名だ"},{en:"for its traditional culture",ja:"その伝統的な文化で"},{en:"and beautiful gardens.",ja:"そして美しい庭園でも"}],
+          soundNote:"especially famous→「イスペシャリフェイマス」のようにlyとfが連結。traditional culture→「トラディショノゥカルチャ」のようにlが弱化。" },
+        { en:"Tokyo offers a unique mix of modern technology and traditional Japanese customs.",
+          slashChunks:[{en:"Tokyo offers",ja:"東京は提供している"},{en:"a unique mix",ja:"独自のミックスを"},{en:"of modern technology and traditional Japanese customs.",ja:"現代テクノロジーと日本の伝統的な習慣の"}],
+          soundNote:"unique mix→「ユニークミックス」のようにeとmが連結。technology and→「テクノロジャン」のようにyとaが連結。" },
+        { en:"Many tourists are surprised by how clean and safe Japanese cities are.",
+          slashChunks:[{en:"Many tourists are surprised",ja:"多くの観光客は驚く"},{en:"by how clean and safe",ja:"どれほど清潔で安全かに"},{en:"Japanese cities are.",ja:"日本の都市が"}],
+          soundNote:"surprised by→「サプライズドバイ」のようにdとbが連結。clean and safe→「クリーナンセイフ」のようにnとaが連結。" },
+        { en:"The number of foreign visitors to Japan has increased dramatically over the past decade.",
+          slashChunks:[{en:"The number of foreign visitors to Japan",ja:"日本への外国人訪問者数が"},{en:"has increased dramatically",ja:"劇的に増加してきた"},{en:"over the past decade.",ja:"過去10年で"}],
+          soundNote:"has increased→「ァズインクリースト」のようにhが落ちる。dramatically→「ドラマリクリ」のようにtが濁る。" },
+        { en:"However, some popular areas are now suffering from overtourism.",
+          slashChunks:[{en:"However,",ja:"しかし"},{en:"some popular areas",ja:"一部の人気エリアは"},{en:"are now suffering from overtourism.",ja:"今やオーバーツーリズムに苦しんでいる"}],
+          soundNote:"popular areas→「ポピュラーエアリアズ」のようにrとaが連結。suffering from→「サファリンフロム」のようにgとfが連結。" },
+        { en:"Local residents sometimes feel that too many tourists can damage their quality of life.",
+          slashChunks:[{en:"Local residents sometimes feel",ja:"地元の住民はときに感じる"},{en:"that too many tourists",ja:"観光客が多すぎると"},{en:"can damage their quality of life.",ja:"生活の質を損なうことがあると"}],
+          soundNote:"residents sometimes→「レジデンツサムタイムズ」のようにsとsが連結。quality of→「クウォリリオヴ」のようにtが濁る。" },
+        { en:"Sustainable tourism is becoming an important topic for governments and tourism agencies.",
+          slashChunks:[{en:"Sustainable tourism",ja:"持続可能な観光が"},{en:"is becoming an important topic",ja:"重要なトピックになってきている"},{en:"for governments and tourism agencies.",ja:"政府や観光機関にとって"}],
+          soundNote:"sustainable tourism→「サステイナボゥチュアリズム」のようにlが弱化。important topic→「インポータントトピック」のようにtとtが連結。" },
+        { en:"By respecting local culture and the environment, tourists can help protect the places they visit.",
+          slashChunks:[{en:"By respecting local culture and the environment,",ja:"地元の文化と環境を尊重することで"},{en:"tourists can help protect",ja:"観光客は保護するのを助けることができる"},{en:"the places they visit.",ja:"自分たちが訪れる場所を"}],
+          soundNote:"respecting local→「リスペクリンロウコゥ」のようにtが濁る。help protect→「ヘルププロテクト」のようにpとpが連結。" },
+      ]
+    },
+    {
+      id:"A-L06", topic:"スポーツ・健康",
+      sentences: [
+        { en:"Sport plays an important role in building physical strength and mental health.",
+          slashChunks:[{en:"Sport plays an important role",ja:"スポーツは重要な役割を果たしている"},{en:"in building physical strength",ja:"体力を築くことにおいて"},{en:"and mental health.",ja:"そして精神的健康においても"}],
+          soundNote:"plays an→「プレイザン」のようにsとaが連結。physical strength→「フィジコゥストレンクス」のようにlが弱化。" },
+        { en:"Regular exercise has been shown to reduce the risk of serious diseases such as diabetes and heart disease.",
+          slashChunks:[{en:"Regular exercise has been shown",ja:"定期的な運動は示されてきた"},{en:"to reduce the risk of serious diseases",ja:"深刻な病気のリスクを下げることが"},{en:"such as diabetes and heart disease.",ja:"糖尿病や心臓病などの"}],
+          soundNote:"has been shown→「ァズビーンショウン」のようにhが落ちる。diabetes and→「ダイアビーティーザン」のようにsとaが連結。" },
+        { en:"Team sports also teach valuable life skills such as cooperation and communication.",
+          slashChunks:[{en:"Team sports also teach",ja:"チームスポーツはまた教える"},{en:"valuable life skills",ja:"価値ある人生スキルを"},{en:"such as cooperation and communication.",ja:"協力やコミュニケーションなどの"}],
+          soundNote:"also teach→「オールソウティーチ」のようにoとtが連結。cooperation and→「コウオペレイションャン」のようにnとaが連結。" },
+        { en:"In Japan, many students participate in club activities after school.",
+          slashChunks:[{en:"In Japan,",ja:"日本では"},{en:"many students participate",ja:"多くの生徒が参加している"},{en:"in club activities after school.",ja:"放課後の部活動に"}],
+          soundNote:"participate in→「パーリスィペイリン」のようにtが濁る。activities after→「アクティヴィリーザフタ」のようにtが濁りsとaが連結。" },
+        { en:"These activities help students develop discipline and a sense of belonging.",
+          slashChunks:[{en:"These activities help students",ja:"これらの活動は生徒が〜するのを助ける"},{en:"develop discipline",ja:"規律を身につけ"},{en:"and a sense of belonging.",ja:"そして帰属意識を持つことを"}],
+          soundNote:"help students→「ヘルプスチューデンツ」のようにpとsが連結。sense of belonging→「センスォヴビロンギン」のようにsとoが連結。" },
+        { en:"However, overtraining and pressure from coaches can sometimes lead to burnout.",
+          slashChunks:[{en:"However,",ja:"しかし"},{en:"overtraining and pressure from coaches",ja:"過度な練習やコーチからのプレッシャーが"},{en:"can sometimes lead to burnout.",ja:"ときにバーンアウトに繋がりうる"}],
+          soundNote:"overtraining and→「オウヴァートレイニンャン」のようにgとaが連結。lead to burnout→「リードタバーンアウト」。" },
+        { en:"Professional athletes often inspire young people to pursue their dreams.",
+          slashChunks:[{en:"Professional athletes",ja:"プロのアスリートはしばしば"},{en:"often inspire young people",ja:"若者を奮い立たせる"},{en:"to pursue their dreams.",ja:"夢を追いかけるよう"}],
+          soundNote:"athletes often→「アスリーツオーフン」のようにsとoが連結。pursue their→「パスューゼア」のようにtheirのhが落ちる。" },
+        { en:"The Olympic Games bring countries together and celebrate human achievement.",
+          slashChunks:[{en:"The Olympic Games bring countries together",ja:"オリンピックは国々を一緒にする"},{en:"and celebrate human achievement.",ja:"そして人間の功績を祝う"}],
+          soundNote:"bring countries→「ブリンカントリーズ」のようにgとcが連結。human achievement→「ヒューマナチーヴメント」のようにnとaが連結。" },
+        { en:"Sports also have the power to break down cultural and national barriers.",
+          slashChunks:[{en:"Sports also have the power",ja:"スポーツはまた力を持っている"},{en:"to break down cultural and national barriers.",ja:"文化的・国家的障壁を壊す"}],
+          soundNote:"also have→「オールソウァヴ」のようにoとhが連結hが落ちる。break down→「ブレイクダウン」のようにkとdが連結。" },
+        { en:"Whether you play for fun or competition, staying active is one of the best things you can do for your health.",
+          slashChunks:[{en:"Whether you play for fun or competition,",ja:"楽しみや競争のためにやるにしても"},{en:"staying active",ja:"活動的でいることは"},{en:"is one of the best things",ja:"最良のことの1つだ"},{en:"you can do for your health.",ja:"健康のためにできる"}],
+          soundNote:"whether you→「ウェザユー」のようにrとyが連結。staying active→「ステイインアクティヴ」のようにgとaが連結。" },
+      ]
+    },
+    {
+      id:"A-L07", topic:"音楽・芸術",
+      sentences: [
+        { en:"Music is a universal language that can connect people across cultures and borders.",
+          slashChunks:[{en:"Music is a universal language",ja:"音楽は普遍的な言語だ"},{en:"that can connect people",ja:"人々をつなぐことができる"},{en:"across cultures and borders.",ja:"文化や国境を超えて"}],
+          soundNote:"universal language→「ユニヴァーソゥランギウィジ」のようにlが弱化しlとlが連結。cultures and→「カルチャーザン」のようにsとaが連結。" },
+        { en:"From classical compositions to modern pop, music reflects the values and emotions of its time.",
+          slashChunks:[{en:"From classical compositions to modern pop,",ja:"クラシックの作曲から現代ポップまで"},{en:"music reflects the values and emotions",ja:"音楽はその時代の価値観と感情を反映している"},{en:"of its time.",ja:""}],
+          soundNote:"classical compositions→「クラスィコゥコンポジションズ」のようにlが弱化。reflects the→「リフレクツダ」のようにtsとtheが連結。" },
+        { en:"Learning to play a musical instrument has many cognitive and emotional benefits.",
+          slashChunks:[{en:"Learning to play a musical instrument",ja:"楽器を演奏することを学ぶことには"},{en:"has many cognitive and emotional benefits.",ja:"多くの認知的・感情的なメリットがある"}],
+          soundNote:"musical instrument→「ミュージコゥインストルメント」のようにlが弱化しlとiが連結。cognitive and→「コグニリヴャン」のようにtが濁る。" },
+        { en:"Studies show that children who study music tend to perform better in math and reading.",
+          slashChunks:[{en:"Studies show",ja:"研究は示している"},{en:"that children who study music",ja:"音楽を学ぶ子どもたちは"},{en:"tend to perform better",ja:"より良い成績を収める傾向があると"},{en:"in math and reading.",ja:"数学と読解で"}],
+          soundNote:"tend to perform→「テンダパフォーム」のようにdとtとpが連結。better in→「ベラリン」のようにtが濁る。" },
+        { en:"Art, like music, allows people to express emotions that are difficult to put into words.",
+          slashChunks:[{en:"Art, like music,",ja:"芸術は・音楽のように"},{en:"allows people to express emotions",ja:"人々が感情を表現することを可能にする"},{en:"that are difficult to put into words.",ja:"言葉にするのが難しい"}],
+          soundNote:"like music→「ライクミュージック」のようにkとmが連結。difficult to put→「ディフィコゥタプット」のようにtが濁る。" },
+        { en:"Street art and graffiti have become recognized forms of artistic expression in many cities.",
+          slashChunks:[{en:"Street art and graffiti",ja:"ストリートアートとグラフィティは"},{en:"have become recognized forms",ja:"認められた形式となってきた"},{en:"of artistic expression in many cities.",ja:"多くの都市での芸術的表現の"}],
+          soundNote:"have become→「ァヴビカム」のようにhが落ちる。recognized forms→「レカグナイズドフォームズ」のようにdとfが連結。" },
+        { en:"The music industry has changed dramatically with the rise of streaming services.",
+          slashChunks:[{en:"The music industry has changed dramatically",ja:"音楽産業は劇的に変わってきた"},{en:"with the rise of streaming services.",ja:"ストリーミングサービスの台頭で"}],
+          soundNote:"has changed→「ァズチェインジド」のようにhが落ちる。streaming services→「ストリーミンサーヴィスィズ」のようにgとsが連結。" },
+        { en:"Artists can now reach global audiences without the support of major record labels.",
+          slashChunks:[{en:"Artists can now reach global audiences",ja:"アーティストは今や世界中の聴衆に届けられる"},{en:"without the support",ja:"サポートなしに"},{en:"of major record labels.",ja:"大手レコードレーベルの"}],
+          soundNote:"reach global→「リーチグロウボゥ」のようにchとgが連結。without the→「ウィザウッダ」のようにtとtheが連結。" },
+        { en:"However, this has also made it harder for musicians to earn a steady income.",
+          slashChunks:[{en:"However,",ja:"しかし"},{en:"this has also made it harder",ja:"これはまた難しくしてきた"},{en:"for musicians to earn a steady income.",ja:"ミュージシャンが安定した収入を得ることを"}],
+          soundNote:"has also made→「ァズオールソウメイド」のようにhが落ちる。steady income→「ステディインカム」のようにyとiが連結。" },
+        { en:"Despite the challenges, music and art remain essential parts of human civilization.",
+          slashChunks:[{en:"Despite the challenges,",ja:"課題にもかかわらず"},{en:"music and art remain",ja:"音楽と芸術は依然として残っている"},{en:"essential parts of human civilization.",ja:"人類文明の不可欠な部分として"}],
+          soundNote:"despite the→「ディスパイッダ」のようにtとtheが連結。essential parts→「イセンシャルパーツ」のようにlとpが連結。" },
+      ]
+    },
+    {
+      id:"A-L08", topic:"将来の夢・キャリア",
+      sentences: [
+        { en:"Choosing a career is one of the most important decisions a young person can make.",
+          slashChunks:[{en:"Choosing a career",ja:"キャリアを選ぶことは"},{en:"is one of the most important decisions",ja:"最も重要な決断の1つだ"},{en:"a young person can make.",ja:"若者がすることのできる"}],
+          soundNote:"choosing a→「チューズィンア」のようにgとaが連結。important decisions→「インポータントディスィジョンズ」のようにtとdが連結。" },
+        { en:"Many young people today are unsure about what they want to do in the future.",
+          slashChunks:[{en:"Many young people today",ja:"今日の多くの若者は"},{en:"are unsure about what they want to do",ja:"自分が将来何をしたいか確信が持てない"},{en:"in the future.",ja:""}],
+          soundNote:"unsure about→「アンシュアラバウト」のようにeとaが連結。want to do→「ウォナドゥー」のようにtとtoが短縮。" },
+        { en:"It is important to explore different interests and experiences before making a final choice.",
+          slashChunks:[{en:"It is important to explore",ja:"探ることが重要だ"},{en:"different interests and experiences",ja:"さまざまな興味と経験を"},{en:"before making a final choice.",ja:"最終的な選択をする前に"}],
+          soundNote:"important to explore→「インポータンタイクスプロー」のようにtとtoとeが連結。final choice→「ファイノゥチョイス」のようにlが弱化。" },
+        { en:"Some people follow their passion, while others prioritize job security and salary.",
+          slashChunks:[{en:"Some people follow their passion,",ja:"情熱を追う人もいれば"},{en:"while others prioritize",ja:"他の人は優先する"},{en:"job security and salary.",ja:"雇用の安定と給与を"}],
+          soundNote:"follow their→「フォロウゼア」のようにtheirのhが落ちる。prioritize job→「プライオリタイズジョブ」のようにzeとjが連結。" },
+        { en:"The job market is changing rapidly due to advances in technology and globalization.",
+          slashChunks:[{en:"The job market is changing rapidly",ja:"雇用市場は急速に変化している"},{en:"due to advances in technology",ja:"テクノロジーの進歩のために"},{en:"and globalization.",ja:"そしてグローバル化のために"}],
+          soundNote:"changing rapidly→「チェインジンラピッリ」のようにgとrが連結tが濁る。advances in→「アドヴァンスィズィン」のようにsとiが連結。" },
+        { en:"Jobs that exist today may not exist in twenty years, and new jobs will emerge.",
+          slashChunks:[{en:"Jobs that exist today",ja:"今日存在する仕事が"},{en:"may not exist in twenty years,",ja:"20年後には存在しないかもしれず"},{en:"and new jobs will emerge.",ja:"そして新しい仕事が生まれるだろう"}],
+          soundNote:"exist today→「イグズィストゥデイ」のようにtとtが連結。twenty years→「トゥエニイヤーズ」のようにtが濁る。" },
+        { en:"Adaptability and a willingness to keep learning are essential qualities for success.",
+          slashChunks:[{en:"Adaptability and a willingness",ja:"適応力と意欲は"},{en:"to keep learning",ja:"学び続けるための"},{en:"are essential qualities for success.",ja:"成功に不可欠な資質だ"}],
+          soundNote:"adaptability and→「アダプタビリリャン」のようにtが濁る。essential qualities→「イセンシャルクウォリリーズ」のようにlとqが連結。" },
+        { en:"Volunteering and part-time work can give students valuable real-world experience.",
+          slashChunks:[{en:"Volunteering and part-time work",ja:"ボランティアやアルバイトは"},{en:"can give students",ja:"生徒に与えることができる"},{en:"valuable real-world experience.",ja:"価値ある実社会の経験を"}],
+          soundNote:"volunteering and→「ヴォランティアリンャン」のようにgとaが連結。real-world experience→「リーォウワールドイクスピリエンス」。" },
+        { en:"Talking to people in careers you are interested in can help you make more informed decisions.",
+          slashChunks:[{en:"Talking to people",ja:"人々に話すことが"},{en:"in careers you are interested in",ja:"自分が興味あるキャリアの"},{en:"can help you make more informed decisions.",ja:"より情報に基づいた決断をするのを助けることができる"}],
+          soundNote:"talking to→「トーキンタ」のようにgとtが連結。informed decisions→「インフォームドディスィジョンズ」のようにdとdが連結。" },
+        { en:"Whatever you choose, finding meaning and satisfaction in your work is the ultimate goal.",
+          slashChunks:[{en:"Whatever you choose,",ja:"何を選ぶにしても"},{en:"finding meaning and satisfaction in your work",ja:"仕事に意味と満足を見つけることが"},{en:"is the ultimate goal.",ja:"最終的な目標だ"}],
+          soundNote:"whatever you→「ウォッテヴァユー」のようにrとyが連結。ultimate goal→「アルティメットゴウル」のようにtが濁る。" },
+      ]
+    },
   ],
 
   B: [
@@ -538,6 +716,146 @@ const LESSONS = {
         { en:"Investing in public health today is one of the most effective ways to build a stronger society.",
           slashChunks:[{en:"Investing in public health today",ja:"今日の公衆衛生への投資が"},{en:"is one of the most effective ways",ja:"最も効果的な方法の1つだ"},{en:"to build a stronger society.",ja:"より強い社会を築くための"}],
           soundNote:"investing in→「インヴェスリンイン」のようにtが濁る。one of the most→「ワネヴダモウスト」のように連結。" },
+      ]
+    },
+    {
+      id:"B-L05", topic:"経済・お金・仕事",
+      sentences: [
+        { en:"The global economy is more interconnected than ever before.",
+          slashChunks:[{en:"The global economy",ja:"世界経済は"},{en:"is more interconnected than ever before.",ja:"これまで以上に相互につながっている"}],
+          soundNote:"more interconnected→「モーインタコネクティッ」のようにrとiが連結tが濁る。than ever before→「ザンネヴァビフォ」のように連結。" },
+        { en:"A financial crisis in one country can quickly spread to economies around the world.",
+          slashChunks:[{en:"A financial crisis in one country",ja:"ある国の金融危機は"},{en:"can quickly spread",ja:"急速に広がりうる"},{en:"to economies around the world.",ja:"世界中の経済に"}],
+          soundNote:"financial crisis→「ファイナンシャルクライスィス」のようにlとcが連結。quickly spread→「クウィクリスプレッド」のようにlyとsが連結。" },
+        { en:"Inflation, the rise in the general price level, can reduce the purchasing power of consumers.",
+          slashChunks:[{en:"Inflation,",ja:"インフレーションは"},{en:"the rise in the general price level,",ja:"一般的な物価水準の上昇だが"},{en:"can reduce the purchasing power of consumers.",ja:"消費者の購買力を下げうる"}],
+          soundNote:"general price→「ジェネロゥプライス」のようにlが弱化しlとpが連結。purchasing power→「パーチェシンパウワ」のようにgとpが連結。" },
+        { en:"Central banks use interest rates as a tool to control inflation and stimulate economic growth.",
+          slashChunks:[{en:"Central banks use interest rates",ja:"中央銀行は金利を使う"},{en:"as a tool to control inflation",ja:"インフレを抑制するツールとして"},{en:"and stimulate economic growth.",ja:"そして経済成長を促進するために"}],
+          soundNote:"interest rates→「インタレストレイツ」のようにtとrが連結。stimulate economic→「スティミュレイテコノミック」のようにtとeが連結。" },
+        { en:"The gap between high-income and low-income workers has grown in many developed countries.",
+          slashChunks:[{en:"The gap between high-income and low-income workers",ja:"高所得者と低所得者の間の格差が"},{en:"has grown",ja:"拡大してきた"},{en:"in many developed countries.",ja:"多くの先進国で"}],
+          soundNote:"high-income and→「ハイインカムャン」のようにmとaが連結。developed countries→「ディヴェロップトカントリーズ」のようにdとcが連結。" },
+        { en:"The rise of the gig economy has created flexible but often unstable work conditions.",
+          slashChunks:[{en:"The rise of the gig economy",ja:"ギグエコノミーの台頭は"},{en:"has created flexible but often unstable",ja:"柔軟だがしばしば不安定な状況を生み出してきた"},{en:"work conditions.",ja:"労働条件を"}],
+          soundNote:"gig economy→「ギグイコノミ」のようにgとeが連結。flexible but→「フレクサボゥバット」のようにlが弱化しeとbが連結。" },
+        { en:"Many people are concerned about the future of work as automation replaces more jobs.",
+          slashChunks:[{en:"Many people are concerned",ja:"多くの人々は心配している"},{en:"about the future of work",ja:"仕事の未来について"},{en:"as automation replaces more jobs.",ja:"自動化がより多くの仕事を置き換えるにつれて"}],
+          soundNote:"concerned about→「コンサーンダバウト」のようにdとaが連結。automation replaces→「オートメイションリプレイスィズ」のようにnとrが連結。" },
+        { en:"Financial literacy, knowing how to manage money, is an essential skill for modern life.",
+          slashChunks:[{en:"Financial literacy,",ja:"ファイナンシャルリテラシーは"},{en:"knowing how to manage money,",ja:"お金の管理方法を知ることだが"},{en:"is an essential skill for modern life.",ja:"現代生活に不可欠なスキルだ"}],
+          soundNote:"financial literacy→「ファイナンシャルリタラスィ」のようにlとlが連結。essential skill→「イセンシャルスキル」のようにlとsが連結。" },
+        { en:"Saving regularly, even small amounts, can make a significant difference over time.",
+          slashChunks:[{en:"Saving regularly,",ja:"定期的に貯蓄することは"},{en:"even small amounts,",ja:"少額でも"},{en:"can make a significant difference over time.",ja:"時間をかけて大きな違いをもたらしうる"}],
+          soundNote:"saving regularly→「セイヴィンレギュラリ」のようにgとrが連結。significant difference→「スィグニフィカントディファレンス」のようにtとdが連結。" },
+        { en:"Understanding basic economics helps people make better decisions about work, spending, and investment.",
+          slashChunks:[{en:"Understanding basic economics",ja:"基本的な経済学を理解することは"},{en:"helps people make better decisions",ja:"より良い決断をするのを助ける"},{en:"about work, spending, and investment.",ja:"仕事・支出・投資について"}],
+          soundNote:"basic economics→「ベイスィキコノミックス」のようにcとeが連結。spending and→「スペンディンャン」のようにgとaが連結。" },
+      ]
+    },
+    {
+      id:"B-L06", topic:"教育・学習",
+      sentences: [
+        { en:"Education is widely considered to be one of the most powerful tools for social progress.",
+          slashChunks:[{en:"Education is widely considered",ja:"教育は広く考えられている"},{en:"to be one of the most powerful tools",ja:"最も強力なツールの1つとして"},{en:"for social progress.",ja:"社会の進歩のための"}],
+          soundNote:"widely considered→「ワイドリコンスィダード」のようにlyとcが連結。powerful tools→「パウワフォゥトゥールズ」のようにlが弱化しlとtが連結。" },
+        { en:"Access to quality education remains unequal in many parts of the world.",
+          slashChunks:[{en:"Access to quality education",ja:"質の高い教育へのアクセスが"},{en:"remains unequal",ja:"依然として不平等だ"},{en:"in many parts of the world.",ja:"世界の多くの地域で"}],
+          soundNote:"quality education→「クウォリリエデュケイション」のようにtが濁りyとeが連結。remains unequal→「リメインズアニークウォル」のようにsとuが連結。" },
+        { en:"In many developing countries, children, especially girls, face barriers to attending school.",
+          slashChunks:[{en:"In many developing countries,",ja:"多くの発展途上国では"},{en:"children, especially girls,",ja:"子どもたち・特に女の子は"},{en:"face barriers to attending school.",ja:"学校に通ることへの障壁に直面している"}],
+          soundNote:"especially girls→「イスペシャリガールズ」のようにlyとgが連結。barriers to→「バリャーズタ」のようにsとtが連結。" },
+        { en:"The rise of online learning has made education more accessible to people around the world.",
+          slashChunks:[{en:"The rise of online learning",ja:"オンライン学習の台頭は"},{en:"has made education more accessible",ja:"教育をよりアクセスしやすくしてきた"},{en:"to people around the world.",ja:"世界中の人々に"}],
+          soundNote:"online learning→「オンラインラーニン」のようにeとlが連結。more accessible→「モーラクセサボゥ」のようにrとaが連結lが弱化。" },
+        { en:"However, online learning also has drawbacks, such as lack of social interaction.",
+          slashChunks:[{en:"However,",ja:"しかし"},{en:"online learning also has drawbacks,",ja:"オンライン学習にはデメリットもある"},{en:"such as lack of social interaction.",ja:"社会的交流の欠如などの"}],
+          soundNote:"also has drawbacks→「オールソウァズドロウバックス」のようにhが落ちsとdが連結。social interaction→「ソウシャルインタラクション」のようにlとiが連結。" },
+        { en:"Critical thinking and problem-solving skills are increasingly valued in the modern workplace.",
+          slashChunks:[{en:"Critical thinking and problem-solving skills",ja:"批判的思考と問題解決スキルは"},{en:"are increasingly valued",ja:"ますます評価されている"},{en:"in the modern workplace.",ja:"現代の職場で"}],
+          soundNote:"critical thinking→「クリリコゥシンキン」のようにtが濁る。increasingly valued→「インクリースィングリヴァリュード」のようにlyとvが連結。" },
+        { en:"Many educators argue that creativity and emotional intelligence should be taught alongside traditional subjects.",
+          slashChunks:[{en:"Many educators argue",ja:"多くの教育者は主張する"},{en:"that creativity and emotional intelligence",ja:"創造性と感情的知性は"},{en:"should be taught alongside traditional subjects.",ja:"伝統的な科目と並んで教えられるべきだと"}],
+          soundNote:"argue that→「アーギュザット」のようにeとtが連結。taught alongside→「トートアロングサイド」のようにtとaが連結。" },
+        { en:"Lifelong learning, continuing to study throughout one's life, is essential in a rapidly changing world.",
+          slashChunks:[{en:"Lifelong learning,",ja:"生涯学習は"},{en:"continuing to study throughout one's life,",ja:"人生を通じて学び続けることだが"},{en:"is essential in a rapidly changing world.",ja:"急速に変化する世界で不可欠だ"}],
+          soundNote:"lifelong learning→「ライフロンラーニン」のようにgとlが連結。rapidly changing→「ラピッリチェインジン」のようにdが濁る。" },
+        { en:"Teachers play a crucial role in inspiring students and shaping the next generation.",
+          slashChunks:[{en:"Teachers play a crucial role",ja:"教師は重要な役割を果たしている"},{en:"in inspiring students",ja:"生徒を奮い立たせることにおいて"},{en:"and shaping the next generation.",ja:"そして次の世代を形成することにおいて"}],
+          soundNote:"crucial role→「クルーシャルロウル」のようにlとrが連結。inspiring students→「インスパイアリンスチューデンツ」のようにgとsが連結。" },
+        { en:"Investing in education is not just good for individuals but for society as a whole.",
+          slashChunks:[{en:"Investing in education",ja:"教育への投資は"},{en:"is not just good for individuals",ja:"個人のためだけでなく"},{en:"but for society as a whole.",ja:"社会全体のためでもある"}],
+          soundNote:"investing in→「インヴェスリンイン」のようにtが濁る。society as a→「ソサイアティアザ」のようにyとaが連結。" },
+      ]
+    },
+    {
+      id:"B-L07", topic:"食文化・グルメ",
+      sentences: [
+        { en:"Food is much more than just nutrition — it is a reflection of culture, history, and identity.",
+          slashChunks:[{en:"Food is much more than just nutrition",ja:"食べ物は栄養以上のものだ"},{en:"— it is a reflection",ja:"それは反映だ"},{en:"of culture, history, and identity.",ja:"文化・歴史・アイデンティティの"}],
+          soundNote:"much more than→「マッチモーザン」のように連結。reflection of→「リフレクションォヴ」のようにnとoが連結。" },
+        { en:"Japanese cuisine is known worldwide for its emphasis on fresh ingredients and delicate flavors.",
+          slashChunks:[{en:"Japanese cuisine is known worldwide",ja:"日本料理は世界中で知られている"},{en:"for its emphasis on fresh ingredients",ja:"新鮮な食材へのこだわりで"},{en:"and delicate flavors.",ja:"そして繊細な風味でも"}],
+          soundNote:"cuisine is→「クウィジーンイズ」のようにeとiが連結。fresh ingredients→「フレッシュイングリーディェンツ」のようにshとiが連結。" },
+        { en:"The concept of umami, a savory taste, has gained recognition in the global culinary world.",
+          slashChunks:[{en:"The concept of umami,",ja:"うまみという概念は"},{en:"a savory taste,",ja:"旨味のことだが"},{en:"has gained recognition",ja:"認知を得てきた"},{en:"in the global culinary world.",ja:"世界の料理界で"}],
+          soundNote:"concept of→「コンセプトォヴ」のようにtとoが連結。culinary world→「カリナリワールド」のようにyとwが連結。" },
+        { en:"Street food culture is thriving in cities across Asia, offering affordable and delicious meals.",
+          slashChunks:[{en:"Street food culture is thriving",ja:"ストリートフード文化は栄えている"},{en:"in cities across Asia,",ja:"アジア全体の都市で"},{en:"offering affordable and delicious meals.",ja:"手頃で美味しい食事を提供しながら"}],
+          soundNote:"thriving in→「スライヴィンイン」のようにgとiが連結。affordable and→「アフォーダボゥャン」のようにlが弱化しeとaが連結。" },
+        { en:"The slow food movement encourages people to eat locally grown, sustainably produced food.",
+          slashChunks:[{en:"The slow food movement",ja:"スローフード運動は"},{en:"encourages people to eat",ja:"人々が食べることを奨励している"},{en:"locally grown, sustainably produced food.",ja:"地元で育てられ持続可能な方法で生産された食品を"}],
+          soundNote:"encourages people→「インカリジィズピーポゥ」のようにsとpが連結。locally grown→「ロウコリグロウン」のようにlyとgが連結。" },
+        { en:"Fast food chains have spread across the world, changing traditional eating habits.",
+          slashChunks:[{en:"Fast food chains have spread across the world,",ja:"ファストフードチェーンは世界中に広まり"},{en:"changing traditional eating habits.",ja:"伝統的な食習慣を変えてきた"}],
+          soundNote:"chains have→「チェインズァヴ」のようにsとhが連結hが落ちる。traditional eating→「トラディショノゥイーリン」のようにlが弱化しlとeが連結。" },
+        { en:"However, there is a growing interest in traditional and local foods as people seek healthier options.",
+          slashChunks:[{en:"However,",ja:"しかし"},{en:"there is a growing interest in traditional and local foods",ja:"伝統的・地元の食品への関心が高まっている"},{en:"as people seek healthier options.",ja:"人々がより健康的な選択肢を求めるにつれて"}],
+          soundNote:"growing interest→「グロウィンインタレスト」のようにgとiが連結。seek healthier→「スィークヘルシア」のようにkとhが連結。" },
+        { en:"Vegetarian and vegan diets have become increasingly popular due to health and environmental concerns.",
+          slashChunks:[{en:"Vegetarian and vegan diets",ja:"ベジタリアンとビーガンの食事は"},{en:"have become increasingly popular",ja:"ますます人気になってきた"},{en:"due to health and environmental concerns.",ja:"健康と環境への懸念から"}],
+          soundNote:"vegan diets→「ヴィーガンダイアッツ」のようにnとdが連結。environmental concerns→「エンヴァイロンメントォルコンサーンズ」のようにlとcが連結。" },
+        { en:"Food waste is a serious global problem, with billions of tons of food thrown away each year.",
+          slashChunks:[{en:"Food waste is a serious global problem,",ja:"食品廃棄は深刻なグローバル問題で"},{en:"with billions of tons of food",ja:"何十億トンもの食品が"},{en:"thrown away each year.",ja:"毎年捨てられている"}],
+          soundNote:"billions of tons→「ビリョンゾヴトンズ」のように連結。thrown away→「スロウナウェイ」のようにnとaが連結。" },
+        { en:"Sharing a meal with others remains one of the most powerful ways to build relationships.",
+          slashChunks:[{en:"Sharing a meal with others",ja:"他の人と食事を共にすることは"},{en:"remains one of the most powerful ways",ja:"依然として最も強力な方法の1つだ"},{en:"to build relationships.",ja:"関係を築くための"}],
+          soundNote:"meal with→「ミーォウィズ」のようにlが弱化しlとwが連結。most powerful→「モウストパウワフォゥ」のようにtとpが連結lが弱化。" },
+      ]
+    },
+    {
+      id:"B-L08", topic:"都市と農村・地方創生",
+      sentences: [
+        { en:"Around the world, more people are living in cities than in rural areas for the first time in history.",
+          slashChunks:[{en:"Around the world,",ja:"世界中で"},{en:"more people are living in cities",ja:"より多くの人々が都市に住んでいる"},{en:"than in rural areas",ja:"農村地域よりも"},{en:"for the first time in history.",ja:"歴史上初めて"}],
+          soundNote:"living in cities→「リヴィンインスィリーズ」のようにgとiが連結tが濁る。rural areas→「ルーロゥエアリアズ」のようにlが弱化しlとaが連結。" },
+        { en:"Urbanization has brought economic opportunities but also challenges such as overcrowding and pollution.",
+          slashChunks:[{en:"Urbanization has brought economic opportunities",ja:"都市化は経済的機会をもたらしてきたが"},{en:"but also challenges",ja:"課題ももたらしてきた"},{en:"such as overcrowding and pollution.",ja:"過密や汚染などの"}],
+          soundNote:"has brought→「ァズブロート」のようにhが落ちる。overcrowding and→「オウヴァクラウディンャン」のようにgとaが連結。" },
+        { en:"Many young people leave rural areas to seek better education and employment in cities.",
+          slashChunks:[{en:"Many young people leave rural areas",ja:"多くの若者が農村地域を離れる"},{en:"to seek better education and employment",ja:"より良い教育と雇用を求めて"},{en:"in cities.",ja:"都市で"}],
+          soundNote:"leave rural→「リーヴルーロゥ」のようにvとrが連結lが弱化。education and→「エデュケイションャン」のようにnとaが連結。" },
+        { en:"This population shift can lead to aging and depopulation in rural communities.",
+          slashChunks:[{en:"This population shift",ja:"この人口移動は"},{en:"can lead to aging and depopulation",ja:"高齢化と過疎化に繋がりうる"},{en:"in rural communities.",ja:"農村コミュニティの"}],
+          soundNote:"population shift→「ポピュレイションシフト」のようにnとshが連結。aging and→「エイジンャン」のようにgとaが連結。" },
+        { en:"Governments in many countries are trying to revitalize rural areas through investment and incentives.",
+          slashChunks:[{en:"Governments in many countries",ja:"多くの国の政府は"},{en:"are trying to revitalize rural areas",ja:"農村地域を活性化しようとしている"},{en:"through investment and incentives.",ja:"投資やインセンティブを通じて"}],
+          soundNote:"revitalize rural→「リヴァイタライズルーロゥ」のようにzeとrが連結。investment and→「インヴェストメントャン」のようにtとaが連結。" },
+        { en:"Remote work, made possible by technology, has allowed some people to move away from crowded cities.",
+          slashChunks:[{en:"Remote work,",ja:"リモートワークは"},{en:"made possible by technology,",ja:"テクノロジーで可能になったが"},{en:"has allowed some people",ja:"一部の人々が〜できるようにしてきた"},{en:"to move away from crowded cities.",ja:"混雑した都市から離れることを"}],
+          soundNote:"made possible→「メイドポッサボゥ」のようにdとpが連結lが弱化。move away from→「ムーヴァウェイフロム」のようにvとaが連結。" },
+        { en:"Rural areas often offer a cleaner environment and a slower pace of life.",
+          slashChunks:[{en:"Rural areas often offer",ja:"農村地域はしばしば提供している"},{en:"a cleaner environment",ja:"よりきれいな環境と"},{en:"and a slower pace of life.",ja:"そしてゆっくりとした生活ペースを"}],
+          soundNote:"often offer→「オーフノファ」のようにnとoが連結。slower pace→「スロウアパイス」のようにrとpが連結。" },
+        { en:"Local agriculture and tourism can help sustain rural economies and preserve traditional ways of life.",
+          slashChunks:[{en:"Local agriculture and tourism",ja:"地元の農業と観光は"},{en:"can help sustain rural economies",ja:"農村経済を維持するのを助けることができる"},{en:"and preserve traditional ways of life.",ja:"そして伝統的な生活様式を守ることができる"}],
+          soundNote:"agriculture and→「アグリカルチャーャン」のようにeとaが連結。preserve traditional→「プリザーヴトラディショノゥ」のようにvとtが連結lが弱化。" },
+        { en:"Finding the right balance between urban development and rural preservation is a key challenge.",
+          slashChunks:[{en:"Finding the right balance",ja:"適切なバランスを見つけることが"},{en:"between urban development and rural preservation",ja:"都市開発と農村保全の間の"},{en:"is a key challenge.",ja:"重要な課題だ"}],
+          soundNote:"urban development→「アーボンディヴェロップメント」のようにnとdが連結。rural preservation→「ルーロゥプレザヴェイション」のようにlが弱化しlとpが連結。" },
+        { en:"Both city life and country life have their own unique advantages and disadvantages.",
+          slashChunks:[{en:"Both city life and country life",ja:"都市生活も田舎生活も"},{en:"have their own unique advantages",ja:"それぞれ独自のメリットがある"},{en:"and disadvantages.",ja:"そしてデメリットも"}],
+          soundNote:"city life and→「スィリライフャン」のようにtが濁りfとaが連結。unique advantages→「ユニークアドヴァンティジィズ」のようにeとaが連結。" },
       ]
     },
   ],
@@ -682,6 +1000,146 @@ const LESSONS = {
           soundNote:"insights of→「インサイツォヴ」のようにtsとoが連結。deeply practical→「ディープリプラクリコゥ」のようにtが濁る。" },
       ]
     },
+    {
+      id:"C-L05", topic:"生命倫理・バイオテクノロジー",
+      sentences: [
+        { en:"Advances in biotechnology are raising profound ethical questions about the nature of life itself.",
+          slashChunks:[{en:"Advances in biotechnology",ja:"バイオテクノロジーの進歩は"},{en:"are raising profound ethical questions",ja:"深遠な倫理的問いを提起している"},{en:"about the nature of life itself.",ja:"生命そのものの本質について"}],
+          soundNote:"biotechnology are→「バイオテクノロジャー」のようにyとaが連結。profound ethical→「プロファウンデシコゥ」のようにdとeが連結lが弱化。" },
+        { en:"The development of CRISPR gene-editing technology allows scientists to modify DNA with unprecedented precision.",
+          slashChunks:[{en:"The development of CRISPR gene-editing technology",ja:"CRISPRゲノム編集技術の開発は"},{en:"allows scientists to modify DNA",ja:"科学者がDNAを改変することを可能にする"},{en:"with unprecedented precision.",ja:"前例のない精度で"}],
+          soundNote:"gene-editing technology→「ジーンエディリンテクノロジ」のようにgとtが連結tが濁る。unprecedented precision→「アンプレスィデントプリスィジョン」のようにtとpが連結。" },
+        { en:"This technology holds enormous promise for treating genetic diseases, but also raises serious concerns.",
+          slashChunks:[{en:"This technology holds enormous promise",ja:"この技術は莫大な可能性を持っている"},{en:"for treating genetic diseases,",ja:"遺伝性疾患を治療する"},{en:"but also raises serious concerns.",ja:"しかし深刻な懸念も提起している"}],
+          soundNote:"enormous promise→「イノーマスプロミス」のようにsとpが連結。raises serious→「レイズィズスィアリアス」のようにzとsが連結。" },
+        { en:"The prospect of designing genetically enhanced humans has been called playing God by critics.",
+          slashChunks:[{en:"The prospect of designing genetically enhanced humans",ja:"遺伝的に強化された人間をデザインするという展望は"},{en:"has been called playing God",ja:"神のまねごとと呼ばれてきた"},{en:"by critics.",ja:"批判者たちに"}],
+          soundNote:"genetically enhanced→「ジェネリカリインハンスト」のようにlyとeが連結。playing God→「プレイインガッド」のようにgとGが連結。" },
+        { en:"Cloning technology, while still limited, has reignited debates about identity and individuality.",
+          slashChunks:[{en:"Cloning technology,",ja:"クローン技術は"},{en:"while still limited,",ja:"まだ限定的だが"},{en:"has reignited debates",ja:"議論に再び火をつけてきた"},{en:"about identity and individuality.",ja:"アイデンティティと個性について"}],
+          soundNote:"while still→「ワイルスティル」のようにeとsが連結。reignited debates→「リイグナイティッディベイツ」のようにdが濁りdとdが連結。" },
+        { en:"Stem cell research offers potential cures for conditions ranging from Parkinson's disease to spinal cord injuries.",
+          slashChunks:[{en:"Stem cell research offers potential cures",ja:"幹細胞研究は潜在的な治療法を提供している"},{en:"for conditions ranging from Parkinson's disease",ja:"パーキンソン病から"},{en:"to spinal cord injuries.",ja:"脊髄損傷に至る症状に"}],
+          soundNote:"cell research→「セルリサーチ」のようにlとrが連結。ranging from→「レインジンフロム」のようにgとfが連結。" },
+        { en:"The commercialization of genetic information by private companies raises urgent privacy concerns.",
+          slashChunks:[{en:"The commercialization of genetic information",ja:"遺伝情報の商業化は"},{en:"by private companies",ja:"民間企業による"},{en:"raises urgent privacy concerns.",ja:"緊急のプライバシーへの懸念を提起している"}],
+          soundNote:"commercialization of→「コマーシャライゼイションォヴ」のようにnとoが連結。private companies→「プライヴィッカンパニーズ」のようにtが濁る。" },
+        { en:"International agreements are needed to ensure that biotechnology is developed responsibly.",
+          slashChunks:[{en:"International agreements are needed",ja:"国際的な合意が必要だ"},{en:"to ensure that biotechnology",ja:"バイオテクノロジーが"},{en:"is developed responsibly.",ja:"責任ある形で開発されるよう確保するために"}],
+          soundNote:"agreements are→「アグリーメンツァー」のようにsとaが連結。developed responsibly→「ディヴェロップトリスポンサブリ」のようにdとrが連結。" },
+        { en:"The pace of biotechnological innovation is outstripping our ability to fully understand its consequences.",
+          slashChunks:[{en:"The pace of biotechnological innovation",ja:"バイオテクノロジー革新のペースが"},{en:"is outstripping our ability",ja:"私たちの能力を上回っている"},{en:"to fully understand its consequences.",ja:"その結果を完全に理解する"}],
+          soundNote:"outstripping our→「アウトストリッピンアワ」のようにgとoが連結。fully understand→「フォリアンダスタンド」のようにlyとuが連結。" },
+        { en:"Society must engage in open, informed debate about where to draw the line in manipulating life.",
+          slashChunks:[{en:"Society must engage in open, informed debate",ja:"社会はオープンで情報に基づいた議論に参加しなければならない"},{en:"about where to draw the line",ja:"どこに線を引くかについて"},{en:"in manipulating life.",ja:"生命を操作することにおいて"}],
+          soundNote:"engage in→「エンゲイジィン」のようにgとiが連結。draw the line→「ドローダライン」のようにwとtheが連結。" },
+      ]
+    },
+    {
+      id:"C-L06", topic:"言語と文化・翻訳",
+      sentences: [
+        { en:"Language is not merely a tool for communication but a living expression of culture and worldview.",
+          slashChunks:[{en:"Language is not merely a tool for communication",ja:"言語はコミュニケーションのためのツールだけでなく"},{en:"but a living expression",ja:"生きた表現だ"},{en:"of culture and worldview.",ja:"文化と世界観の"}],
+          soundNote:"merely a tool→「ミアリアトゥール」のようにlyとaが連結。living expression→「リヴィンイクスプレッション」のようにgとeが連結。" },
+        { en:"Every language encodes a unique way of perceiving and categorizing the world.",
+          slashChunks:[{en:"Every language encodes",ja:"すべての言語は組み込んでいる"},{en:"a unique way of perceiving",ja:"独自の認識の方法を"},{en:"and categorizing the world.",ja:"そして世界を分類する方法を"}],
+          soundNote:"encodes a→「エンコウズァ」のようにsとaが連結。perceiving and→「パスィーヴィンャン」のようにgとaが連結。" },
+        { en:"When a language dies, the world loses an irreplaceable way of understanding human experience.",
+          slashChunks:[{en:"When a language dies,",ja:"ある言語が消えるとき"},{en:"the world loses",ja:"世界は失う"},{en:"an irreplaceable way of understanding",ja:"かけがえのない理解の方法を"},{en:"human experience.",ja:"人間の経験の"}],
+          soundNote:"language dies→「ランギウィジダイズ」のようにeとdが連結。irreplaceable way→「イリプレイサボゥウェイ」のようにlが弱化。" },
+        { en:"Currently, more than half of the world's approximately seven thousand languages are considered endangered.",
+          slashChunks:[{en:"Currently,",ja:"現在"},{en:"more than half of the world's approximately seven thousand languages",ja:"世界のおよそ7000言語の半数以上が"},{en:"are considered endangered.",ja:"絶滅危惧と考えられている"}],
+          soundNote:"approximately seven→「アプロクスィメイトリセヴン」のようにlyとsが連結。endangered→「エンデインジャード」のようにdとdが連結。" },
+        { en:"Translation is far more complex than simply converting words from one language to another.",
+          slashChunks:[{en:"Translation is far more complex",ja:"翻訳はずっと複雑だ"},{en:"than simply converting words",ja:"単に単語を変換するより"},{en:"from one language to another.",ja:"1つの言語から別の言語に"}],
+          soundNote:"far more complex→「ファーモーコンプレックス」のようにrとmが連結。converting words→「コンヴァーリンワーズ」のようにtが濁る。" },
+        { en:"A skilled translator must capture not just meaning but tone, humor, and cultural nuance.",
+          slashChunks:[{en:"A skilled translator must capture",ja:"熟練した翻訳者は捉えなければならない"},{en:"not just meaning but tone, humor,",ja:"意味だけでなくトーン・ユーモアも"},{en:"and cultural nuance.",ja:"そして文化的なニュアンスも"}],
+          soundNote:"skilled translator→「スキルドトランスレイタ」のようにdとtが連結。just meaning→「ジャストミーニン」のようにtとmが連結。" },
+        { en:"Some concepts are so deeply embedded in a culture that they have no direct equivalent in other languages.",
+          slashChunks:[{en:"Some concepts are so deeply embedded",ja:"一部の概念はとても深く組み込まれているので"},{en:"in a culture",ja:"ある文化に"},{en:"that they have no direct equivalent",ja:"直接の同等語を持たない"},{en:"in other languages.",ja:"他の言語には"}],
+          soundNote:"deeply embedded→「ディープリエンベディッ」のようにlyとeが連結dが濁る。direct equivalent→「ダイレクティクウィヴァレント」のようにtとeが連結。" },
+        { en:"Machine translation has improved dramatically, but still struggles with idiomatic expressions and context.",
+          slashChunks:[{en:"Machine translation has improved dramatically,",ja:"機械翻訳は劇的に改善されてきたが"},{en:"but still struggles",ja:"まだ苦闘している"},{en:"with idiomatic expressions and context.",ja:"慣用表現や文脈に"}],
+          soundNote:"has improved→「ァズインプルーヴド」のようにhが落ちる。idiomatic expressions→「イディオマリックイクスプレッションズ」のようにtが濁る。" },
+        { en:"Bilingual and multilingual individuals often report that their personality seems different in each language.",
+          slashChunks:[{en:"Bilingual and multilingual individuals",ja:"バイリンガルやマルチリンガルの個人は"},{en:"often report",ja:"しばしば報告する"},{en:"that their personality seems different",ja:"自分の性格が違って感じられると"},{en:"in each language.",ja:"それぞれの言語で"}],
+          soundNote:"multilingual individuals→「マルティリンギュォリンディヴィジュォズ」のようにlとiが連結。seems different→「スィームズディファレント」のようにsとdが連結。" },
+        { en:"Preserving linguistic diversity is not just a cultural goal but a way of safeguarding human knowledge.",
+          slashChunks:[{en:"Preserving linguistic diversity",ja:"言語の多様性を守ることは"},{en:"is not just a cultural goal",ja:"単なる文化的目標だけでなく"},{en:"but a way of safeguarding human knowledge.",ja:"人間の知識を守る方法でもある"}],
+          soundNote:"preserving linguistic→「プリザーヴィンリンギウィスティック」のようにgとlが連結。safeguarding human→「セイフガーディンヒューマン」のようにgとhが連結。" },
+      ]
+    },
+    {
+      id:"C-L07", topic:"幸福論・生きがい",
+      sentences: [
+        { en:"What does it mean to live a good life? Philosophers have debated this question for thousands of years.",
+          slashChunks:[{en:"What does it mean to live a good life?",ja:"良い人生を生きるとはどういうことか"},{en:"Philosophers have debated this question",ja:"哲学者たちはこの問いを議論してきた"},{en:"for thousands of years.",ja:"何千年もの間"}],
+          soundNote:"what does it mean→「ウォッダズィットミーン」のようにdとitとmが連結。have debated→「ァヴディベイリッ」のようにhが落ちtが濁る。" },
+        { en:"Aristotle believed that happiness, or eudaimonia, is achieved through living a virtuous and purposeful life.",
+          slashChunks:[{en:"Aristotle believed",ja:"アリストテレスは信じた"},{en:"that happiness, or eudaimonia,",ja:"幸福・すなわちエウダイモニアは"},{en:"is achieved through living",ja:"生きることを通じて達成されると"},{en:"a virtuous and purposeful life.",ja:"徳のある目的ある人生を"}],
+          soundNote:"believed that→「ビリーヴドザット」のようにdとtが連結。achieved through→「アチーヴドスルー」のようにdとtが連結。" },
+        { en:"Modern psychology suggests that happiness comes from a combination of pleasure, meaning, and connection.",
+          slashChunks:[{en:"Modern psychology suggests",ja:"現代心理学は示唆している"},{en:"that happiness comes",ja:"幸福は生まれると"},{en:"from a combination of pleasure, meaning, and connection.",ja:"喜び・意味・つながりの組み合わせから"}],
+          soundNote:"psychology suggests→「サイコロジサジェスツ」のようにyとsが連結。combination of→「コンビネイションォヴ」のようにnとoが連結。" },
+        { en:"Research consistently shows that strong social relationships are one of the strongest predictors of well-being.",
+          slashChunks:[{en:"Research consistently shows",ja:"研究は一貫して示している"},{en:"that strong social relationships",ja:"強い社会的関係が"},{en:"are one of the strongest predictors of well-being.",ja:"幸福の最も強力な予測因子の1つだと"}],
+          soundNote:"consistently shows→「コンスィステントリショウズ」のようにlyとshが連結。strongest predictors→「ストロンゲストプリディクターズ」のようにtとpが連結。" },
+        { en:"The Japanese concept of ikigai suggests that a sense of purpose is central to a fulfilled life.",
+          slashChunks:[{en:"The Japanese concept of ikigai",ja:"日本の生きがいという概念は示唆している"},{en:"suggests that a sense of purpose",ja:"目的意識が"},{en:"is central to a fulfilled life.",ja:"充実した人生の中心だと"}],
+          soundNote:"concept of ikigai→「コンセプトォヴイキガイ」のようにtとoとiが連結。central to a→「セントロゥタア」のようにlが弱化しtとaが連結。" },
+        { en:"Materialism, the pursuit of wealth and possessions, has been shown to have limited effects on lasting happiness.",
+          slashChunks:[{en:"Materialism,",ja:"物質主義は"},{en:"the pursuit of wealth and possessions,",ja:"富と所有物の追求だが"},{en:"has been shown to have limited effects",ja:"限定的な影響しかないことが示されてきた"},{en:"on lasting happiness.",ja:"持続的な幸福に"}],
+          soundNote:"pursuit of→「パスューィットォヴ」のようにtとoが連結。has been shown→「ァズビーンショウン」のようにhが落ちる。" },
+        { en:"Acts of kindness and generosity tend to increase the happiness of both the giver and the receiver.",
+          slashChunks:[{en:"Acts of kindness and generosity",ja:"親切と寛大さの行為は"},{en:"tend to increase the happiness",ja:"幸福を増やす傾向がある"},{en:"of both the giver and the receiver.",ja:"与える人と受ける人の両方の"}],
+          soundNote:"kindness and→「カインドネッサン」のようにsとaが連結。giver and the→「ギヴァランダ」のようにrとaと theが連結。" },
+        { en:"Mindfulness practices help people appreciate the present moment rather than constantly seeking more.",
+          slashChunks:[{en:"Mindfulness practices help people",ja:"マインドフルネスの実践は人々が〜するのを助ける"},{en:"appreciate the present moment",ja:"現在の瞬間を大切にすることを"},{en:"rather than constantly seeking more.",ja:"常により多くを求めるのではなく"}],
+          soundNote:"practices help→「プラクリスィズヘルプ」のようにsとhが連結。constantly seeking→「コンスタントリスィーキン」のようにlyとsが連結。" },
+        { en:"Ultimately, the definition of a good life may be deeply personal and resist any single universal answer.",
+          slashChunks:[{en:"Ultimately,",ja:"最終的に"},{en:"the definition of a good life",ja:"良い人生の定義は"},{en:"may be deeply personal",ja:"深く個人的なものかもしれず"},{en:"and resist any single universal answer.",ja:"いかなる単一の普遍的な答えにも抵抗するかもしれない"}],
+          soundNote:"deeply personal→「ディープリパーソノゥ」のようにlyとpが連結lが弱化。resist any→「リズィスタニ」のようにtとaが連結。" },
+        { en:"Perhaps the most honest answer is that the pursuit of happiness is itself part of what makes life meaningful.",
+          slashChunks:[{en:"Perhaps the most honest answer is",ja:"おそらく最も誠実な答えは"},{en:"that the pursuit of happiness",ja:"幸福の追求そのものが"},{en:"is itself part of what makes life meaningful.",ja:"人生を意味深くするものの一部だということだ"}],
+          soundNote:"most honest→「モウストオネスト」のようにtとhが連結。itself part→「イッセルフパート」のようにfとpが連結。" },
+      ]
+    },
+    {
+      id:"C-L08", topic:"環境哲学・自然と人間",
+      sentences: [
+        { en:"For most of human history, nature was seen as something to be conquered and exploited.",
+          slashChunks:[{en:"For most of human history,",ja:"人類の歴史のほとんどにおいて"},{en:"nature was seen as something",ja:"自然は何かとして見られていた"},{en:"to be conquered and exploited.",ja:"征服され利用されるべき"}],
+          soundNote:"most of human→「モウストォヴヒューマン」のようにtとoとhが連結。conquered and→「コンカードャン」のようにdとaが連結。" },
+        { en:"This anthropocentric worldview placed humans at the center of the universe and above all other species.",
+          slashChunks:[{en:"This anthropocentric worldview",ja:"この人間中心主義的世界観は"},{en:"placed humans at the center of the universe",ja:"人間を宇宙の中心に置いた"},{en:"and above all other species.",ja:"そして他のすべての種の上に"}],
+          soundNote:"anthropocentric worldview→「アンスロポセントリックワールドヴュー」のようにcとwが連結。above all other→「アバヴオーロザ」のようにvとaとlが連結。" },
+        { en:"The environmental crisis has forced many people to reconsider this relationship between humans and the natural world.",
+          slashChunks:[{en:"The environmental crisis",ja:"環境危機は"},{en:"has forced many people to reconsider",ja:"多くの人々に再考することを強いてきた"},{en:"this relationship between humans and the natural world.",ja:"人間と自然界のこの関係を"}],
+          soundNote:"has forced→「ァズフォースト」のようにhが落ちる。reconsider this→「リコンスィダーリス」のようにrとtが連結。" },
+        { en:"Philosophers like Peter Singer argue that animals have rights and that causing them unnecessary suffering is morally wrong.",
+          slashChunks:[{en:"Philosophers like Peter Singer argue",ja:"ピーター・シンガーのような哲学者は主張する"},{en:"that animals have rights",ja:"動物は権利を持ち"},{en:"and that causing them unnecessary suffering",ja:"不必要な苦しみを与えることは"},{en:"is morally wrong.",ja:"道徳的に間違っていると"}],
+          soundNote:"Singer argue→「スィンガーアーギュ」のようにrとaが連結。unnecessary suffering→「アンネセサリサファリン」のようにyとsが連結。" },
+        { en:"Deep ecology goes further, suggesting that nature has intrinsic value independent of its usefulness to humans.",
+          slashChunks:[{en:"Deep ecology goes further,",ja:"ディープエコロジーはさらに進んで"},{en:"suggesting that nature has intrinsic value",ja:"自然は本質的な価値を持つと示唆している"},{en:"independent of its usefulness to humans.",ja:"人間への有用性とは無関係に"}],
+          soundNote:"goes further→「ゴウズファーザ」のようにsとfが連結。intrinsic value→「イントリンスィックヴァリュー」のようにcとvが連結。" },
+        { en:"Indigenous communities have long maintained a sense of kinship with the land and living creatures.",
+          slashChunks:[{en:"Indigenous communities",ja:"先住民コミュニティは"},{en:"have long maintained a sense of kinship",ja:"長い間親族意識を維持してきた"},{en:"with the land and living creatures.",ja:"土地と生き物への"}],
+          soundNote:"have long maintained→「ァヴロンメインテインド」のようにhが落ちgとmが連結。living creatures→「リヴィンクリーチャーズ」のようにgとcが連結。" },
+        { en:"The concept of sustainability calls for meeting present needs without compromising the ability of future generations to meet their own.",
+          slashChunks:[{en:"The concept of sustainability",ja:"持続可能性の概念は求める"},{en:"calls for meeting present needs",ja:"現在のニーズを満たすことを"},{en:"without compromising the ability",ja:"能力を損なうことなく"},{en:"of future generations to meet their own.",ja:"将来の世代が自分たちのニーズを満たす"}],
+          soundNote:"calls for→「コールズフォ」のようにsとfが連結。compromising the→「コンプロマイズィンダ」のようにgとtheが連結。" },
+        { en:"Climate activists argue that economic growth cannot continue indefinitely on a planet with finite resources.",
+          slashChunks:[{en:"Climate activists argue",ja:"気候活動家たちは主張する"},{en:"that economic growth cannot continue indefinitely",ja:"経済成長は無限に続けることができないと"},{en:"on a planet with finite resources.",ja:"有限の資源を持つ惑星では"}],
+          soundNote:"activists argue→「アクティヴィスツアーギュ」のようにsとaが連結。continue indefinitely→「コンティニューインデフィニトリ」のようにeとiが連結。" },
+        { en:"Reconnecting with nature, through practices like forest bathing or gardening, has been shown to improve mental health.",
+          slashChunks:[{en:"Reconnecting with nature,",ja:"自然とつながり直すことは"},{en:"through practices like forest bathing or gardening,",ja:"森林浴や園芸などの実践を通じて"},{en:"has been shown to improve mental health.",ja:"精神的健康を改善することが示されてきた"}],
+          soundNote:"reconnecting with→「リコネクリンウィズ」のようにgとwが連結。forest bathing→「フォレストベイシン」のようにtとbが連結。" },
+        { en:"How we choose to live in relation to the natural world may be the defining moral question of our age.",
+          slashChunks:[{en:"How we choose to live",ja:"私たちがどのように生きることを選ぶかが"},{en:"in relation to the natural world",ja:"自然界との関係において"},{en:"may be the defining moral question of our age.",ja:"私たちの時代の決定的な道徳的問いかもしれない"}],
+          soundNote:"choose to live→「チューズタリヴ」のようにseとtが連結。defining moral→「ディファイニンモーロゥ」のようにgとmが連結lが弱化。" },
+      ]
+    },
   ],
   D: [
     {
@@ -824,6 +1282,146 @@ const LESSONS = {
           soundNote:"at its best→「アリッツベスト」のようにtとitsが連結。merely a record→「ミアリアレコード」のようにlyとaが連結。" },
       ]
     },
+    {
+      id:"D-L05", topic:"意識の謎・クオリア",
+      sentences: [
+        { en:"Consciousness remains one of the deepest and most perplexing mysteries in all of science and philosophy.",
+          slashChunks:[{en:"Consciousness remains",ja:"意識は依然として"},{en:"one of the deepest and most perplexing mysteries",ja:"最も深く困惑させる謎の1つだ"},{en:"in all of science and philosophy.",ja:"科学と哲学のすべてにおいて"}],
+          soundNote:"deepest and most→「ディーペスタンモウスト」のようにtとaとmが連結。perplexing mysteries→「パープレクスィンミスタリーズ」のようにgとmが連結。" },
+        { en:"The hard problem of consciousness asks why and how physical processes in the brain give rise to subjective experience.",
+          slashChunks:[{en:"The hard problem of consciousness asks",ja:"意識のハード問題は問いかける"},{en:"why and how physical processes in the brain",ja:"なぜどのようにして脳の物理的プロセスが"},{en:"give rise to subjective experience.",ja:"主観的経験を生み出すのかを"}],
+          soundNote:"hard problem→「ハードプロブレム」のようにdとpが連結。give rise to→「ギヴライズタ」のようにvとrとtが連結。" },
+        { en:"Qualia — the redness of red, the painfulness of pain — are the raw feels of conscious experience that resist scientific explanation.",
+          slashChunks:[{en:"Qualia —",ja:"クオリアは"},{en:"the redness of red, the painfulness of pain —",ja:"赤の赤さ・痛みの痛さ"},{en:"are the raw feels of conscious experience",ja:"意識的経験の生の感覚であり"},{en:"that resist scientific explanation.",ja:"科学的説明に抵抗する"}],
+          soundNote:"redness of red→「レドネッソヴレッド」のようにsとoとrが連結。conscious experience→「コンシャスイクスピリエンス」のようにsとeが連結。" },
+        { en:"Physicalists argue that consciousness is nothing more than a complex pattern of neural activity.",
+          slashChunks:[{en:"Physicalists argue",ja:"物理主義者たちは主張する"},{en:"that consciousness is nothing more",ja:"意識はただそれ以上ではないと"},{en:"than a complex pattern of neural activity.",ja:"神経活動の複雑なパターン以上の"}],
+          soundNote:"physicalists argue→「フィジカリスツアーギュ」のようにsとaが連結。neural activity→「ニューロゥアクティヴィリ」のようにlが弱化しlとaが連結。" },
+        { en:"Dualists, on the other hand, maintain that the mind is fundamentally distinct from the physical brain.",
+          slashChunks:[{en:"Dualists,",ja:"二元論者たちは"},{en:"on the other hand,",ja:"一方で"},{en:"maintain that the mind is fundamentally distinct",ja:"心は根本的に異なると主張する"},{en:"from the physical brain.",ja:"物理的な脳とは"}],
+          soundNote:"maintain that→「メインテインザット」のようにnとtが連結。fundamentally distinct→「ファンダメントォリディスティンクト」のようにlが弱化しlとdが連結。" },
+        { en:"Panpsychism, the view that consciousness is a fundamental feature of the universe, has attracted growing interest.",
+          slashChunks:[{en:"Panpsychism,",ja:"汎心論は"},{en:"the view that consciousness is a fundamental feature of the universe,",ja:"意識は宇宙の根本的な特徴という見方だが"},{en:"has attracted growing interest.",ja:"高まる関心を集めてきた"}],
+          soundNote:"panpsychism→「パンサイキズム」のようにnとpが連結。fundamental feature→「ファンダメントォルフィーチャ」のようにlが弱化しlとfが連結。" },
+        { en:"If we ever build a machine that behaves exactly like a conscious human, how would we know if it is really conscious?",
+          slashChunks:[{en:"If we ever build a machine",ja:"もし私たちがいつか機械を作ったとして"},{en:"that behaves exactly like a conscious human,",ja:"意識ある人間とまったく同じように振る舞う"},{en:"how would we know",ja:"どうすれば私たちは知ることができるのか"},{en:"if it is really conscious?",ja:"それが本当に意識を持っているかどうかを"}],
+          soundNote:"behaves exactly→「ビヘイヴズイグザクトリ」のようにsとeが連結。would we know→「ウッドウィノウ」のようにdとwが連結。" },
+        { en:"The Turing Test proposed that a machine passing as human in conversation would demonstrate machine intelligence.",
+          slashChunks:[{en:"The Turing Test proposed",ja:"チューリングテストは提唱した"},{en:"that a machine passing as human in conversation",ja:"会話において人間として通る機械が"},{en:"would demonstrate machine intelligence.",ja:"機械知能を示すと"}],
+          soundNote:"proposed that→「プロポウズドザット」のようにdとtが連結。passing as human→「パースィンアズヒューマン」のようにgとaが連結。" },
+        { en:"Yet even perfect behavioral mimicry does not resolve the question of whether there is something it is like to be that machine.",
+          slashChunks:[{en:"Yet even perfect behavioral mimicry",ja:"しかし完璧な行動の模倣でさえ"},{en:"does not resolve the question",ja:"問いを解決しない"},{en:"of whether there is something it is like",ja:"何か〜であることがあるかどうかという"},{en:"to be that machine.",ja:"その機械であることが"}],
+          soundNote:"behavioral mimicry→「ビヘイヴィョロゥミミクリ」のようにlが弱化しlとmが連結。resolve the→「リゾルヴダ」のようにvとtheが連結。" },
+        { en:"Understanding consciousness may require not just better science but a fundamental rethinking of our concepts of mind, matter, and meaning.",
+          slashChunks:[{en:"Understanding consciousness",ja:"意識を理解するには"},{en:"may require not just better science",ja:"より良い科学だけでなく"},{en:"but a fundamental rethinking",ja:"根本的な再考が必要かもしれない"},{en:"of our concepts of mind, matter, and meaning.",ja:"心・物質・意味の私たちの概念の"}],
+          soundNote:"require not just→「リクワイアナットジャスト」のようにrとnとjが連結。fundamental rethinking→「ファンダメントォルリシンキン」のようにlが弱化しlとrが連結。" },
+      ]
+    },
+    {
+      id:"D-L06", topic:"民主主義の危機・政治哲学",
+      sentences: [
+        { en:"Democracy, once seen as the inevitable end point of political development, is facing serious challenges worldwide.",
+          slashChunks:[{en:"Democracy,",ja:"民主主義は"},{en:"once seen as the inevitable end point of political development,",ja:"かつて政治発展の不可避の終着点と見られていたが"},{en:"is facing serious challenges worldwide.",ja:"世界中で深刻な課題に直面している"}],
+          soundNote:"inevitable end point→「イネヴィタボゥエンドポイント」のようにlが弱化しlとeとpが連結。challenges worldwide→「チャレンジズワールドワイド」のようにzとwが連結。" },
+        { en:"Populist leaders have gained power in many countries by appealing to anti-establishment sentiment.",
+          slashChunks:[{en:"Populist leaders have gained power",ja:"ポピュリストの指導者たちは権力を得てきた"},{en:"in many countries",ja:"多くの国で"},{en:"by appealing to anti-establishment sentiment.",ja:"反エスタブリッシュメントの感情に訴えることで"}],
+          soundNote:"have gained→「ァヴゲインド」のようにhが落ちる。anti-establishment sentiment→「アンタイイスタブリッシュメントセンティメント」。" },
+        { en:"Social media has accelerated the spread of misinformation, making it harder to form shared public understanding.",
+          slashChunks:[{en:"Social media has accelerated",ja:"ソーシャルメディアは加速させてきた"},{en:"the spread of misinformation,",ja:"誤情報の拡散を"},{en:"making it harder to form",ja:"形成することをより難しくしながら"},{en:"shared public understanding.",ja:"共有された公の理解を"}],
+          soundNote:"has accelerated→「ァズアクセラレイリッ」のようにhが落ちtが濁る。harder to form→「ハーダタフォーム」のようにrとtとfが連結。" },
+        { en:"Echo chambers, in which people are only exposed to views they already hold, deepen political polarization.",
+          slashChunks:[{en:"Echo chambers,",ja:"エコーチェンバーは"},{en:"in which people are only exposed to views",ja:"人々が自分がすでに持つ見解にしか触れない場所で"},{en:"they already hold,",ja:""},{en:"deepen political polarization.",ja:"政治的二極化を深める"}],
+          soundNote:"only exposed to→「オウンリイクスポウズドタ」のようにlyとeとtが連結。political polarization→「ポリリコゥポラライゼイション」のようにtが濁る。" },
+        { en:"Tocqueville warned in the nineteenth century that democracy could produce a soft despotism of conformity.",
+          slashChunks:[{en:"Tocqueville warned",ja:"トクヴィルは警告した"},{en:"in the nineteenth century",ja:"19世紀に"},{en:"that democracy could produce",ja:"民主主義が生み出しうると"},{en:"a soft despotism of conformity.",ja:"従順の柔らかい専制主義を"}],
+          soundNote:"nineteenth century→「ナインティーンスセンチュリ」のようにthとcが連結。despotism of→「デスポティズモヴ」のようにmとoが連結。" },
+        { en:"The tension between majority rule and minority rights is one of the central unresolved dilemmas of democratic theory.",
+          slashChunks:[{en:"The tension between majority rule and minority rights",ja:"多数決と少数者の権利の間の緊張は"},{en:"is one of the central unresolved dilemmas",ja:"中心的な未解決のジレンマの1つだ"},{en:"of democratic theory.",ja:"民主主義理論の"}],
+          soundNote:"majority rule→「マジョリリルール」のようにtが濁る。unresolved dilemmas→「アンリゾルヴドダイレマズ」のようにdとdが連結。" },
+        { en:"Constitutional checks and balances were designed precisely to prevent any single faction from seizing permanent power.",
+          slashChunks:[{en:"Constitutional checks and balances",ja:"憲法上のチェックアンドバランスは"},{en:"were designed precisely",ja:"まさに設計された"},{en:"to prevent any single faction",ja:"いかなる単一の勢力も防ぐために"},{en:"from seizing permanent power.",ja:"永続的な権力を掌握することから"}],
+          soundNote:"designed precisely→「ディザインドプリサイスリ」のようにdとpが連結。seizing permanent→「スィーズィンパーマネント」のようにgとpが連結。" },
+        { en:"Democratic backsliding occurs when elected governments gradually erode the institutions that constrain their power.",
+          slashChunks:[{en:"Democratic backsliding occurs",ja:"民主主義の後退は起こる"},{en:"when elected governments gradually erode",ja:"選出された政府が徐々に侵食するとき"},{en:"the institutions that constrain their power.",ja:"自らの権力を制約する制度を"}],
+          soundNote:"backsliding occurs→「バックスライディンオカーズ」のようにgとoが連結。gradually erode→「グラジュアリイロウド」のようにlyとeが連結。" },
+        { en:"Rebuilding trust in democratic institutions requires transparency, accountability, and genuine civic participation.",
+          slashChunks:[{en:"Rebuilding trust in democratic institutions",ja:"民主主義的制度への信頼を再構築するには"},{en:"requires transparency, accountability,",ja:"透明性・説明責任"},{en:"and genuine civic participation.",ja:"そして真の市民参加が必要だ"}],
+          soundNote:"trust in democratic→「トラストインデモクラリック」のようにtとiとdが連結tが濁る。accountability and→「アカウンタビリリャン」のようにtが濁る。" },
+        { en:"The survival of democracy ultimately depends on citizens who are willing to defend it not just in times of crisis but every day.",
+          slashChunks:[{en:"The survival of democracy",ja:"民主主義の存続は"},{en:"ultimately depends on citizens",ja:"最終的に市民にかかっている"},{en:"who are willing to defend it",ja:"それを守ろうとする"},{en:"not just in times of crisis but every day.",ja:"危機のときだけでなく毎日"}],
+          soundNote:"ultimately depends→「アルティメトリディペンズ」のようにlyとdが連結。willing to defend→「ウィリンタディフェンド」のようにgとtとdが連結。" },
+      ]
+    },
+    {
+      id:"D-L07", topic:"科学と宗教・知の限界",
+      sentences: [
+        { en:"The relationship between science and religion has been one of the most complex and contested in intellectual history.",
+          slashChunks:[{en:"The relationship between science and religion",ja:"科学と宗教の関係は"},{en:"has been one of the most complex and contested",ja:"最も複雑で争われてきたものの1つだ"},{en:"in intellectual history.",ja:"知的歴史において"}],
+          soundNote:"between science→「ビトウィーンサイエンス」のようにnとsが連結。most complex and→「モウストコンプレクサン」のようにtとcとaが連結。" },
+        { en:"Galileo's conflict with the Church over the heliocentric model of the solar system became a symbol of this tension.",
+          slashChunks:[{en:"Galileo's conflict with the Church",ja:"ガリレオと教会の対立は"},{en:"over the heliocentric model of the solar system",ja:"太陽中心モデルをめぐる"},{en:"became a symbol of this tension.",ja:"この緊張のシンボルになった"}],
+          soundNote:"conflict with→「コンフリクトウィズ」のようにtとwが連結。heliocentric model→「ヒリオセントリックモデル」のようにcとmが連結。" },
+        { en:"Many scientists throughout history have held religious beliefs, suggesting the two need not be incompatible.",
+          slashChunks:[{en:"Many scientists throughout history",ja:"歴史を通じて多くの科学者たちが"},{en:"have held religious beliefs,",ja:"宗教的信念を持ってきた"},{en:"suggesting the two need not be incompatible.",ja:"両者が相容れないものである必要はないことを示唆しながら"}],
+          soundNote:"throughout history→「スルーアウトヒストリ」のようにtとhが連結。religious beliefs→「リリジャスビリーフス」のようにsとbが連結。" },
+        { en:"Science operates through observation, experimentation, and falsifiability, while religion typically relies on faith and revelation.",
+          slashChunks:[{en:"Science operates through observation, experimentation, and falsifiability,",ja:"科学は観察・実験・反証可能性を通じて機能するが"},{en:"while religion typically relies",ja:"宗教は典型的に依拠する"},{en:"on faith and revelation.",ja:"信仰と啓示に"}],
+          soundNote:"operates through→「オペレイツスルー」のようにsとtが連結。typically relies→「ティピコリリライズ」のようにlyとrが連結。" },
+        { en:"The limits of scientific knowledge — what can and cannot be measured or tested — define a boundary that some philosophers call the edge of reason.",
+          slashChunks:[{en:"The limits of scientific knowledge —",ja:"科学的知識の限界は"},{en:"what can and cannot be measured or tested —",ja:"測定・検証できるものとできないもの"},{en:"define a boundary",ja:"境界を定義する"},{en:"that some philosophers call the edge of reason.",ja:"一部の哲学者が理性の端と呼ぶ"}],
+          soundNote:"measured or tested→「メジャードオーテスティッ」のようにdとoとtが連結。edge of reason→「エジョヴリーズン」のようにgとoとrが連結。" },
+        { en:"Quantum mechanics has revealed that reality at the subatomic level defies our everyday intuitions about cause and effect.",
+          slashChunks:[{en:"Quantum mechanics has revealed",ja:"量子力学は明らかにしてきた"},{en:"that reality at the subatomic level",ja:"亜原子レベルの現実が"},{en:"defies our everyday intuitions",ja:"私たちの日常的な直観を覆すことを"},{en:"about cause and effect.",ja:"因果関係についての"}],
+          soundNote:"has revealed→「ァズリヴィールド」のようにhが落ちる。everyday intuitions→「エヴリデイインチュイションズ」のようにyとiが連結。" },
+        { en:"Some physicists argue that the fine-tuning of the universe's fundamental constants suggests a designing intelligence.",
+          slashChunks:[{en:"Some physicists argue",ja:"一部の物理学者は主張する"},{en:"that the fine-tuning of the universe's fundamental constants",ja:"宇宙の基本定数の精密な調整が"},{en:"suggests a designing intelligence.",ja:"設計する知性を示唆すると"}],
+          soundNote:"physicists argue→「フィジスィスツアーギュ」のようにsとaが連結。fundamental constants→「ファンダメントォルコンスタンツ」のようにlが弱化しlとcが連結。" },
+        { en:"Others counter that the multiverse theory — the idea that all possible universes exist — removes the need for any such explanation.",
+          slashChunks:[{en:"Others counter",ja:"他の人々は反論する"},{en:"that the multiverse theory —",ja:"多宇宙理論は"},{en:"the idea that all possible universes exist —",ja:"すべての可能な宇宙が存在するという考えだが"},{en:"removes the need for any such explanation.",ja:"そのような説明の必要性を取り除くと"}],
+          soundNote:"counter that→「カウンタザット」のようにrとtが連結。possible universes→「ポサボゥユニヴァーシズ」のようにlが弱化しlとuが連結。" },
+        { en:"Perhaps the deepest question is not whether God exists but what it would mean for a universe to have a purpose.",
+          slashChunks:[{en:"Perhaps the deepest question",ja:"おそらく最も深遠な問いは"},{en:"is not whether God exists",ja:"神が存在するかどうかではなく"},{en:"but what it would mean",ja:"何を意味するのかだ"},{en:"for a universe to have a purpose.",ja:"宇宙が目的を持つということが"}],
+          soundNote:"deepest question→「ディーペストクウェスチョン」のようにtとqが連結。whether God→「ウェザガッド」のようにrとGが連結。" },
+        { en:"Both science and religion, at their best, are expressions of humanity's unquenchable desire to understand the universe and our place within it.",
+          slashChunks:[{en:"Both science and religion, at their best,",ja:"科学と宗教はともに・最良の状態では"},{en:"are expressions of humanity's unquenchable desire",ja:"人類の消せない欲求の表現だ"},{en:"to understand the universe",ja:"宇宙を理解したいという"},{en:"and our place within it.",ja:"そしてその中での私たちの位置を"}],
+          soundNote:"at their best→「アッゼアベスト」のようにtとthとbが連結。unquenchable desire→「アンクウェンチャボゥディザイア」のようにlが弱化。" },
+      ]
+    },
+    {
+      id:"D-L08", topic:"芸術・美学・創造性",
+      sentences: [
+        { en:"Art has accompanied human civilization from its earliest beginnings, from cave paintings to contemporary digital installations.",
+          slashChunks:[{en:"Art has accompanied human civilization",ja:"芸術は人類文明に寄り添ってきた"},{en:"from its earliest beginnings,",ja:"その最初期の始まりから"},{en:"from cave paintings to contemporary digital installations.",ja:"洞窟壁画から現代のデジタルインスタレーションまで"}],
+          soundNote:"has accompanied→「ァズアカンパニード」のようにhが落ちる。earliest beginnings→「アーリエストビギニングズ」のようにtとbが連結。" },
+        { en:"The question of what makes something art has puzzled philosophers, critics, and artists for centuries.",
+          slashChunks:[{en:"The question of what makes something art",ja:"何かを芸術にするものは何かという問いは"},{en:"has puzzled philosophers, critics, and artists",ja:"哲学者・批評家・芸術家たちを困惑させてきた"},{en:"for centuries.",ja:"何世紀もの間"}],
+          soundNote:"makes something→「メイクスサムシン」のようにsとsが連結。has puzzled→「ァズパズォド」のようにhが落ちlが弱化。" },
+        { en:"Plato viewed art with suspicion, arguing that it was merely an imitation of reality and could mislead people.",
+          slashChunks:[{en:"Plato viewed art with suspicion,",ja:"プラトンは芸術を懐疑的に見ており"},{en:"arguing that it was merely an imitation of reality",ja:"それは単なる現実の模倣であると主張し"},{en:"and could mislead people.",ja:"そして人々を誤った方向に導きうると"}],
+          soundNote:"viewed art→「ヴュードアート」のようにdとaが連結。imitation of→「イミテイションォヴ」のようにnとoが連結。" },
+        { en:"Aristotle, by contrast, saw art as a powerful vehicle for emotional catharsis and moral education.",
+          slashChunks:[{en:"Aristotle, by contrast,",ja:"アリストテレスは対照的に"},{en:"saw art as a powerful vehicle",ja:"芸術を強力な媒体として見た"},{en:"for emotional catharsis and moral education.",ja:"感情的カタルシスと道徳教育のための"}],
+          soundNote:"by contrast→「バイコントラスト」のようにyとcが連結。powerful vehicle→「パウワフォゥヴィークル」のようにlが弱化しlとvが連結。" },
+        { en:"The rise of conceptual art in the twentieth century challenged the assumption that skill and beauty were essential to artistic value.",
+          slashChunks:[{en:"The rise of conceptual art",ja:"概念芸術の台頭は"},{en:"in the twentieth century",ja:"20世紀の"},{en:"challenged the assumption",ja:"前提に異議を唱えた"},{en:"that skill and beauty were essential to artistic value.",ja:"技術と美しさが芸術的価値に不可欠だという"}],
+          soundNote:"conceptual art→「コンセプチュォルアート」のようにlが弱化しlとaが連結。challenged the→「チャレンジドダ」のようにdとtheが連結。" },
+        { en:"Marcel Duchamp's famous readymades — mass-produced objects exhibited as art — forced a rethinking of what art could be.",
+          slashChunks:[{en:"Marcel Duchamp's famous readymades —",ja:"マルセル・デュシャンの有名なレディメイドは"},{en:"mass-produced objects exhibited as art —",ja:"芸術として展示された量産品だが"},{en:"forced a rethinking of what art could be.",ja:"芸術が何であるかの再考を迫った"}],
+          soundNote:"readymades mass-produced→「レディメイズマスプロデュースト」のようにzとmが連結。exhibited as→「イグジビティダズ」のようにdとaが連結。" },
+        { en:"Creativity is not the exclusive domain of artists — it is present whenever a person approaches a problem with imagination and originality.",
+          slashChunks:[{en:"Creativity is not the exclusive domain of artists —",ja:"創造性はアーティストだけのものではない"},{en:"it is present",ja:"それは存在する"},{en:"whenever a person approaches a problem",ja:"人が問題に取り組むときはいつでも"},{en:"with imagination and originality.",ja:"想像力と独自性をもって"}],
+          soundNote:"exclusive domain→「イクスクルーズィヴドメイン」のようにvとdが連結。approaches a problem→「アプロウチザプロブレム」のようにsとaが連結。" },
+        { en:"Neuroscientists are beginning to map the brain processes involved in creative thinking, revealing unexpected overlaps between art and science.",
+          slashChunks:[{en:"Neuroscientists are beginning to map",ja:"神経科学者たちは地図を描き始めている"},{en:"the brain processes involved in creative thinking,",ja:"創造的思考に関わる脳のプロセスの"},{en:"revealing unexpected overlaps",ja:"予期しない重複を明らかにしながら"},{en:"between art and science.",ja:"芸術と科学の間の"}],
+          soundNote:"beginning to map→「ビギニンタマップ」のようにgとtとmが連結。unexpected overlaps→「アニクスペクティッドオウヴァラップス」のようにdとoが連結。" },
+        { en:"In an age of artificial intelligence that can generate art, music, and literature, the question of what makes human creativity unique has never been more urgent.",
+          slashChunks:[{en:"In an age of artificial intelligence",ja:"芸術・音楽・文学を生成できる人工知能の時代に"},{en:"that can generate art, music, and literature,",ja:""},{en:"the question of what makes human creativity unique",ja:"人間の創造性を独自のものにする問いは"},{en:"has never been more urgent.",ja:"これほど緊急だったことはない"}],
+          soundNote:"artificial intelligence that→「アーティフィシャリンテリジェンスザット」のようにceとtが連結。creativity unique→「クリエイティヴィリユニーク」のようにtが濁りyとuが連結。" },
+        { en:"Ultimately, art endures because it speaks to something essential in the human condition — our need to make meaning from existence.",
+          slashChunks:[{en:"Ultimately, art endures",ja:"最終的に芸術が持続するのは"},{en:"because it speaks to something essential",ja:"何か本質的なものに語りかけるからだ"},{en:"in the human condition —",ja:"人間の条件における"},{en:"our need to make meaning from existence.",ja:"存在から意味を作り出す私たちの欲求に"}],
+          soundNote:"art endures→「アートエンデュアズ」のようにtとeが連結。make meaning→「メイクミーニン」のようにkとmが連結。" },
+      ]
+    },
   ],
 
 };
@@ -855,6 +1453,22 @@ let slashStarted     = false;
 let slashIdx         = 0;
 let currentRate      = 1.0;
 let completedSents   = []; // 完了した文のインデックス
+let selectedVoice    = null; // 選択中の音声
+let availableVoices  = []; // 利用可能な音声リスト
+// 連続再生
+let contLessonIdx    = 0;
+let contRate         = 1.0;
+let contPlaying      = false;
+let contTimer        = null;
+
+// 音声定義
+const VOICE_PROFILES = [
+  { key:'us',  label:'🇺🇸 US',  flag:'🇺🇸', langs:['en-US'], keywords:['Google US','Samantha','Alex','Microsoft Zira','en-US'] },
+  { key:'uk',  label:'🇬🇧 UK',  flag:'🇬🇧', langs:['en-GB'], keywords:['Google UK','Daniel','Kate','Microsoft Hazel','en-GB'] },
+  { key:'au',  label:'🇦🇺 AU',  flag:'🇦🇺', langs:['en-AU'], keywords:['Google Australian','Karen','Microsoft Catherine','en-AU'] },
+  { key:'in',  label:'🇮🇳 IN',  flag:'🇮🇳', langs:['en-IN'], keywords:['Google हिन्दी','Lekha','Microsoft Heera','en-IN'] },
+  { key:'za',  label:'🇿🇦 ZA',  flag:'🇿🇦', langs:['en-ZA'], keywords:['en-ZA'] },
+];
 
 // ═══════════════════════════════════════════════════════════
 // TTS
@@ -864,15 +1478,20 @@ function speakText(text, onEnd) {
   speechSynthesis.cancel();
   const doSpeak = () => {
     const u = new SpeechSynthesisUtterance(text);
-    u.lang  = 'en-US';
-    u.rate  = currentRate;
-    u.pitch = 1.0;
+    u.rate   = currentRate;
+    u.pitch  = 1.0;
     u.volume = 1.0;
-    const voices = speechSynthesis.getVoices();
-    const v = voices.find(v => v.lang === 'en-US' && v.name.includes('Google'))
-           || voices.find(v => v.lang === 'en-US')
-           || voices.find(v => v.lang.startsWith('en'));
-    if (v) u.voice = v;
+    if (selectedVoice) {
+      u.voice = selectedVoice;
+      u.lang  = selectedVoice.lang;
+    } else {
+      u.lang = 'en-US';
+      const voices = speechSynthesis.getVoices();
+      const v = voices.find(v => v.lang === 'en-US' && v.name.includes('Google'))
+             || voices.find(v => v.lang === 'en-US')
+             || voices.find(v => v.lang.startsWith('en'));
+      if (v) u.voice = v;
+    }
     if (onEnd) u.onend = onEnd;
     u.onerror = () => {};
     speechSynthesis.speak(u);
@@ -883,6 +1502,72 @@ function speakText(text, onEnd) {
     speechSynthesis.onvoiceschanged = () => { speechSynthesis.onvoiceschanged = null; doSpeak(); };
     setTimeout(() => { if (speechSynthesis.getVoices().length === 0) doSpeak(); }, 500);
   }
+}
+
+// 音声ボタンを描画
+function renderVoiceButtons() {
+  const row = document.getElementById('voice-row');
+  const status = document.getElementById('voice-status');
+  if (!row) return;
+
+  const voices = speechSynthesis.getVoices();
+  availableVoices = voices.filter(v => v.lang.startsWith('en'));
+
+  // プロファイルごとにマッチする音声を探す
+  const found = [];
+  VOICE_PROFILES.forEach(profile => {
+    let match = null;
+    // langで検索
+    for (const lang of profile.langs) {
+      match = voices.find(v => v.lang === lang && v.name.includes('Google'))
+           || voices.find(v => v.lang === lang);
+      if (match) break;
+    }
+    if (match) found.push({ profile, voice: match });
+  });
+
+  // ボタン生成
+  // ラベルスパンを残して他を削除
+  row.innerHTML = '<span style="font-size:11px;color:#555;white-space:nowrap">🎙 音声：</span>';
+
+  if (found.length === 0) {
+    row.innerHTML += '<span style="font-size:11px;color:#555">（音声リスト読み込み中...）</span>';
+    status.textContent = '';
+    return;
+  }
+
+  found.forEach(({ profile, voice }, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'voice-btn' + (i === 0 && !selectedVoice ? ' active' : '');
+    btn.textContent = profile.label;
+    btn.dataset.key = profile.key;
+    if (i === 0 && !selectedVoice) {
+      selectedVoice = voice;
+      btn.style.background = document.getElementById('level-tag') ?
+        (document.getElementById('level-tag').style.color || '#4CAF82') : '#4CAF82';
+    }
+    btn.onclick = () => {
+      selectedVoice = voice;
+      document.querySelectorAll('.voice-btn').forEach(b => {
+        b.classList.remove('active');
+        b.style.background = '#1e1e1e';
+      });
+      btn.classList.add('active');
+      const lv = LEVELS.find(l => l.id === currentLevelId);
+      btn.style.background = lv ? lv.color : '#4CAF82';
+      status.textContent = `✅ ${profile.flag} ${voice.name}`;
+      setTimeout(() => { status.textContent = ''; }, 2000);
+    };
+    row.appendChild(btn);
+  });
+
+  // 初期色設定
+  const lv = LEVELS.find(l => l.id === currentLevelId);
+  const activeBtn = row.querySelector('.voice-btn.active');
+  if (activeBtn && lv) activeBtn.style.background = lv.color;
+
+  status.textContent = found.length + '種類の音声が利用可能';
+  setTimeout(() => { status.textContent = ''; }, 2000);
 }
 
 function playPhrase() {
@@ -941,6 +1626,133 @@ function showHome() {
   currentLevelId = null;
 }
 
+// ─── 連続再生 ─────────────────────────────────────────────
+function startContinuousFromCard(levelId, lessonIdx) {
+  currentLevelId = levelId;
+  contLessonIdx  = lessonIdx;
+  const lv     = LEVELS.find(l => l.id === levelId);
+  const lesson = LESSONS[levelId][lessonIdx];
+  const panel  = document.getElementById('continuous-panel');
+  panel.style.display = 'block';
+  panel.style.borderColor = lv.color + '55';
+  document.getElementById('cont-lesson-name').textContent =
+    `LESSON ${lessonIdx + 1}：${lesson.topic}（${lesson.sentences.length}文）`;
+  document.getElementById('cont-play-btn').style.background = lv.color;
+
+  // ドット描画
+  const prog = document.getElementById('cont-progress');
+  prog.innerHTML = '';
+  lesson.sentences.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'cont-dot';
+    dot.id = `cont-dot-${i}`;
+    dot.style.background = '#2a2a2a';
+    prog.appendChild(dot);
+  });
+
+  panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function setContRate(r) {
+  contRate = r;
+  document.querySelectorAll('.cont-rate-btn').forEach(b => {
+    const active = parseFloat(b.dataset.crate) === r;
+    b.classList.toggle('active', active);
+    const lv = LEVELS.find(l => l.id === currentLevelId);
+    b.style.background = active ? (lv ? lv.color : '#4CAF82') : '#1e1e1e';
+  });
+}
+
+function playContinuous() {
+  if (contPlaying) return;
+  const lesson = LESSONS[currentLevelId][contLessonIdx];
+  if (!lesson) return;
+  contPlaying = true;
+  document.getElementById('cont-play-btn').textContent = '⏸ 再生中...';
+  document.getElementById('cont-play-btn').disabled = true;
+  playContSentence(lesson, 0);
+}
+
+function playContSentence(lesson, idx) {
+  if (!contPlaying || idx >= lesson.sentences.length) {
+    finishContinuous(lesson.sentences.length);
+    return;
+  }
+
+  const sent = lesson.sentences[idx];
+  const status = document.getElementById('cont-status');
+  status.textContent = `🔊 文${idx + 1} / ${lesson.sentences.length}：${sent.en.substring(0, 40)}...`;
+
+  // ドット更新
+  document.querySelectorAll('.cont-dot').forEach((d, i) => {
+    d.style.background = i < idx ? '#4CAF82' : '#2a2a2a';
+    d.style.transform  = i === idx ? 'scale(1.5)' : 'scale(1)';
+    if (i === idx) {
+      const lv = LEVELS.find(l => l.id === currentLevelId);
+      d.style.background = lv ? lv.color : '#E8553E';
+    }
+  });
+
+  // 音声再生
+  if (!window.speechSynthesis) { finishContinuous(lesson.sentences.length); return; }
+  speechSynthesis.cancel();
+
+  const u = new SpeechSynthesisUtterance(sent.en);
+  u.rate   = contRate;
+  u.pitch  = 1.0;
+  u.volume = 1.0;
+  if (selectedVoice) {
+    u.voice = selectedVoice;
+    u.lang  = selectedVoice.lang;
+  } else {
+    u.lang = 'en-US';
+    const voices = speechSynthesis.getVoices();
+    const v = voices.find(v => v.lang === 'en-US' && v.name.includes('Google'))
+           || voices.find(v => v.lang === 'en-US')
+           || voices.find(v => v.lang.startsWith('en'));
+    if (v) u.voice = v;
+  }
+
+  u.onend = () => {
+    if (!contPlaying) return;
+    // 0.5秒のインターバル
+    contTimer = setTimeout(() => {
+      playContSentence(lesson, idx + 1);
+    }, 500);
+  };
+  u.onerror = () => {
+    contTimer = setTimeout(() => {
+      playContSentence(lesson, idx + 1);
+    }, 300);
+  };
+
+  speechSynthesis.speak(u);
+}
+
+function finishContinuous(total) {
+  contPlaying = false;
+  const btn = document.getElementById('cont-play-btn');
+  if (btn) { btn.textContent = '▶ 再生開始'; btn.disabled = false; }
+  const status = document.getElementById('cont-status');
+  if (status) status.textContent = `✅ 全${total}文の再生完了！`;
+  // 全ドット緑に
+  document.querySelectorAll('.cont-dot').forEach(d => {
+    d.style.background = '#4CAF82';
+    d.style.transform  = 'scale(1)';
+  });
+}
+
+function stopContinuous() {
+  contPlaying = false;
+  if (contTimer) { clearTimeout(contTimer); contTimer = null; }
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  const btn = document.getElementById('cont-play-btn');
+  if (btn) { btn.textContent = '▶ 再生開始'; btn.disabled = false; }
+  const status = document.getElementById('cont-status');
+  if (status) status.textContent = '⏹ 停止しました';
+  setTimeout(() => { if (status) status.textContent = ''; }, 1500);
+}
+
 function showLevelLessons(levelId) {
   currentLevelId = levelId;
   const lv = LEVELS.find(l => l.id === levelId);
@@ -948,6 +1760,11 @@ function showLevelLessons(levelId) {
   document.getElementById('lesson-select-view').style.display = 'block';
   document.getElementById('work-view').style.display = 'none';
   document.getElementById('lesson-select-title').textContent = `${lv.name} · ${lv.uni} — レッスンを選ぶ`;
+
+  // 連続再生パネルリセット
+  stopContinuous();
+  const panel = document.getElementById('continuous-panel');
+  if (panel) panel.style.display = 'none';
 
   const grid = document.getElementById('lesson-select-grid');
   grid.innerHTML = '';
@@ -959,7 +1776,17 @@ function showLevelLessons(levelId) {
       <div class="lesson-num" style="color:${lv.color}">LESSON ${idx + 1}</div>
       <div class="lesson-topic">${lesson.topic}</div>
       <div class="lesson-preview">${lesson.sentences[0].en.substring(0, 50)}...</div>
-      <div style="font-size:11px;color:#555;margin-top:8px">${lesson.sentences.length}文</div>`;
+      <div style="font-size:11px;color:#555;margin-top:8px">${lesson.sentences.length}文</div>
+      <div style="display:flex;gap:6px;margin-top:12px" onclick="event.stopPropagation()">
+        <button onclick="startLesson('${levelId}',${idx})"
+          style="flex:1;border:none;border-radius:8px;padding:7px 0;font-size:12px;font-weight:700;cursor:pointer;color:#fff;background:${lv.color};font-family:inherit">
+          📖 ワーク開始
+        </button>
+        <button onclick="startContinuousFromCard('${levelId}',${idx})"
+          style="flex:1;border:1px solid ${lv.color}44;border-radius:8px;padding:7px 0;font-size:12px;font-weight:700;cursor:pointer;color:${lv.color};background:transparent;font-family:inherit">
+          ▶ 連続再生
+        </button>
+      </div>`;
     card.onclick = () => startLesson(levelId, idx);
     grid.appendChild(card);
   });
@@ -971,6 +1798,7 @@ function showLevelLessons(levelId) {
 
 function showLessonSelect() {
   stopPhrase();
+  stopContinuous();
   showLevelLessons(currentLevelId);
 }
 
@@ -1098,6 +1926,8 @@ function renderWork() {
   }
 
   setRate(currentRate);
+  // 音声ボタン更新
+  setTimeout(renderVoiceButtons, 100);
 }
 
 function renderFullText(lesson, lv) {
@@ -1321,7 +2151,10 @@ function renderHome() {
 
 renderHome();
 if (window.speechSynthesis) {
-  speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+  speechSynthesis.onvoiceschanged = () => {
+    speechSynthesis.getVoices();
+    renderVoiceButtons();
+  };
   speechSynthesis.getVoices();
 }
 </script>
